@@ -1,0 +1,25 @@
+syntax = "proto3";
+package afs;
+
+option go_package = "github.com/SuhasHebbar/CS739-P1/afs";
+
+service AfsService {
+	rpc Fetch(Path) returns (FileData) {}
+	rpc Store(FileData) returns (IOResult) {}
+}
+
+message Path {
+	optional string path = 1;
+}
+
+message FileData {
+	optional string contents = 1; 
+	optional IOResult status = 2;
+}
+
+message IOResult {
+	optional bool success = 1;
+	optional string err_message = 2;
+}
+
+
