@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.10.2)
 
 project (unreliablefs
-         DESCRIPTION "A FUSE-based fault injection filesystem.")
+         DESCRIPTION "A FUSE-based fault injection filesystem."
+         LANGUAGES C CXX)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
