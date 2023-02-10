@@ -16,8 +16,12 @@ set(afs_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/afs.pb.cc")
 set(afs_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/afs.pb.h")
 set(afs_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/afs.grpc.pb.cc")
 set(afs_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/afs.grpc.pb.h")
+
+# message(afs_proto="${afs_proto}", "${afs_proto_srcs}","${hw_proto_hdrs}", "${hw_grpc_srcs}", "${hw_grpc_hdrs}")
+# message(protoc="${_PROTOBUF_PROTOC}")
+
 add_custom_command(
-      OUTPUT "${afs_proto_srcs}" "${hw_proto_hdrs}" "${hw_grpc_srcs}" "${hw_grpc_hdrs}"
+      OUTPUT "${afs_proto_srcs}" "${afs_proto_hdrs}" "${afs_grpc_srcs}" "${afs_grpc_hdrs}"
       COMMAND ${_PROTOBUF_PROTOC}
       ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
         --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
