@@ -3,10 +3,12 @@
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <cstdio>
 
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
+using grpc::ServerWriter;
 using grpc::Status;
 using afs::Path;
 using afs::FileData;
@@ -14,33 +16,39 @@ using afs::IOResult;
 using afs::AfsService;
 
 class AfsServiceImpl final : public AfsService::Service{
-    Status Fetch(ServerContext* context, const Path* filepath, FileData* filedata){
+    Status Fetch(ServerContext* context, const Path* filepath, ServerWriter<FileData>* writer){
         std::string pathname = filepath->path();
-        IOResult* result = new IOResult;
-        std::ifstream in;
-        in.open(pathname);
-        if(in.fail()){
-            std::cout<<"Failed";
+        int block_size = 8000;
+        FILE* fp;
+        fp = fopen(pathname.c_str(), "r");
+        if(fp == NULL){
+            IOResult* result = new IOResult;
             result->set_success(false);
-            result->set_err_message("File open failed");
+            result->set_err_message("Error while opening file");
+            FileData filedata;
+            filedata.set_allocated_status(result);
+            writer->Write(filedata);
             return Status::OK;
         }
-        result->set_success(true);
-        std::string data = "";
-        std::string line = "";
-        while(getline (in, line)){
-            data+=line + "\n";
+        while(!feof(fp)){
+            IOResult* result = new IOResult;
+            FileData filedata;
+            std::string data(block_size, '\0');
+            fread(&data[0], block_size, 1, fp);
+            if(ferror(fp)){
+                result->set_success(false);
+                result->set_err_message("Error while reading file");
+                filedata.set_allocated_status(result);
+                writer->Write(filedata);
+                return Status::OK;
+            }
+            filedata.set_contents(data);
+            result->set_success(true);
+            filedata.set_allocated_status(result);
+            writer->Write(filedata);
         }
-        std :: cout<<data;
-        filedata->set_contents(data);
-        filedata->set_allocated_status(result);
+        fclose(fp);
         return Status::OK;
-    }
-
-    Status Store(ServerContext* context, FileData* data, IOResult* result){
-       result->set_success(true);
-       result->set_err_message("No error");
-       return Status::OK;
     }
 };
 
@@ -63,3 +71,5 @@ int main(int argc, char** argv) {
     RunServer();
     return 0;
 }
+
+

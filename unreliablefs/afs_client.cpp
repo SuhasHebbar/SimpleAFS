@@ -1,9 +1,12 @@
-#include<grpc++/grpc++.h>
+#include <grpc++/grpc++.h>
 #include "afs.grpc.pb.h"
+#include <fstream>
+#include <cstdio>
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
+using grpc::ClientReader;
 
 using afs::Path;
 using afs::FileData;
@@ -20,17 +23,28 @@ class AfsClient{
             FileData data;
             ClientContext context;
 
-            Status status = stub_->Fetch(&context, path, &data);
-
-            if(status.ok() && data.status().success()){
-                return data.contents();
-            } else if(status.ok()){
-                return data.status().err_message();  
-            } else {
+            std::unique_ptr<ClientReader<FileData> > reader(
+            stub_->Fetch(&context, path));
+            
+            std::string response = "";
+            
+            while(reader->Read(&data)){
+                if(!data.status().success()){
+                    response.clear();
+                    response = data.status().err_message();
+                }
+                else{
+                    response += data.contents();
+                }
+            }  
+            Status status = reader->Finish();
+            if(status.ok()){
+                return response;
+            }
+            else{
                 std::cout << status.error_code() << ": " << status.error_message() << std::endl;
                 return "Everything Sucks";
             }
-
         }
     private:
         std::unique_ptr<AfsService::Stub> stub_;
@@ -47,12 +61,11 @@ void Run() {
 
     std::string response;
 
-    int a = 5;
-    int b = 10;
-    std::string filepath = "./README.md";
+    std::string filepath = "../README.md";
     response = client.Fetch(filepath);
     std::cout << response << std::endl;
 }
+
 
 extern "C" {
     void test_afs() {
