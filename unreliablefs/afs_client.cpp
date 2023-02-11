@@ -55,7 +55,7 @@ void Run() {
 }
 
 extern "C" {
-    void suhas_runs() {
+    void test_afs() {
         Run();
     }
 }

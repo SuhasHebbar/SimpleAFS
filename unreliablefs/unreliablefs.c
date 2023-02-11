@@ -129,11 +129,11 @@ int is_dir(const char *path) {
     return S_ISDIR(statbuf.st_mode);
 }
 
-void suhas_runs();
+void test_afs();
 
 int main(int argc, char *argv[])
 {
-    suhas_runs();
+    test_afs();
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
     memset(&conf, 0, sizeof(conf));
     conf.seed = time(0);

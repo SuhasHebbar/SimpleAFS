@@ -75,6 +75,25 @@ target_compile_options(${AFS_CLIENT_EXECUTABLE} PUBLIC $<$<COMPILE_LANGUAGE:CXX>
 target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused-parameter)
 target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
 
+option(ENABLE_ASAN "Enable AddressSanitizer, a fast memory error detector
+                    based on compiler instrumentation" OFF)
+if(ENABLE_ASAN)
+    target_compile_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=address)
+    target_link_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=address)
+    target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=address)
+    target_link_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=address)
+endif()
+
+option(ENABLE_UBSAN "Enable UBSanitizer, undefined behaviour
+                     detector based on compiler instrumentation" OFF)
+if(ENABLE_UBSAN)
+    target_compile_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=undefined)
+    target_link_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=undefined)
+    target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=undefined)
+    target_link_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=undefined)
+endif()
+
+
 check_function_exists(fallocate HAVE_FALLOCATE)
 check_function_exists(fallocate HAVE_FLOCK)
 check_function_exists(utimensat HAVE_UTIMENSAT)

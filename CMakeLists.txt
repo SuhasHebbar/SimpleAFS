@@ -8,20 +8,6 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake;${CMAKE_MODULE_PATH}")
 
 add_subdirectory(unreliablefs)
 
-option(ENABLE_ASAN "Enable AddressSanitizer, a fast memory error detector
-                    based on compiler instrumentation" OFF)
-if(ENABLE_ASAN)
-    target_compile_options(${PROJECT_NAME} PUBLIC -fsanitize=address)
-    target_link_options(${PROJECT_NAME} PUBLIC -fsanitize=address)
-endif()
-
-option(ENABLE_UBSAN "Enable UBSanitizer, undefined behaviour
-                     detector based on compiler instrumentation" OFF)
-if(ENABLE_UBSAN)
-    target_compile_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined)
-    target_link_options(${PROJECT_NAME} PUBLIC -fsanitize=undefined)
-endif()
-
 add_custom_target(check DEPENDS check-mandoc check-rockspec)
 
 set(ROCKSPEC "unreliablefs-scm-1.rockspec")
