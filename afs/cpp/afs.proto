@@ -4,7 +4,7 @@ package afs;
 option go_package = "github.com/SuhasHebbar/CS739-P1/afs";
 
 service AfsService {
-	rpc Fetch(Path) returns (FileData) {}
+	rpc Fetch(Path) returns (stream FileData) {}
 	rpc Store(FileData) returns (IOResult) {}
 }
 
