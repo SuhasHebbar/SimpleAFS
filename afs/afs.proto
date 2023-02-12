@@ -3,10 +3,9 @@ package afs;
 
 option go_package = "github.com/SuhasHebbar/CS739-P1/afs";
 
-/*
 service AfsService {
-	rpc Fetch(Path) returns (FileData) {}
-	rpc Store(FileData) returns (IOResult) {}
+	rpc Fetch(Path) returns (stream FileData) {}
+	rpc Store(StoreData) returns (IOResult) {}
 	rpc Remove(Path) returns  (IOResult) {}
 	rpc Create(Path) returns  (IOResult) {}
 	rpc Rename(RenameArgs) returns (IOResult) {}
@@ -17,42 +16,7 @@ service AfsService {
 }
 
 message Path {
-	optional string path = 1;
-}
-
-message FileData {
-	optional string contents = 1; 
-	optional IOResult status = 2;
-}
-
-message IOResult {
-	optional bool success = 1;
-	optional string data = 2;
-}
-
-message StatData {
-	optional IOResult result = 1;
-	optional DirectoryData dd = 2;
-}
-
-message DirectoryData {
-	repeated string files = 1;
-}
-
-message RenameArgs {
-	optional string oldName = 1;
-	optional string newName = 2;
-}
-
-*/
-
-service AfsService {
-	rpc Fetch(Path) returns (FileData) {}
-	rpc Store(FileData) returns (IOResult) {}
-}
-
-message Path {
-	optional string path = 1;
+	optional string name = 1;
 }
 
 message FileData {
@@ -64,3 +28,23 @@ message IOResult {
 	optional bool success = 1;
 	optional string err_message = 2;
 }
+
+message StoreData{
+	optional Path path = 1;
+	optional FileData filedata = 2;
+}
+
+message StatData {
+	optional IOResult status = 1;
+	optional DirectoryData dd = 2;
+}
+
+message DirectoryData {
+	repeated string files = 1;
+}
+
+message RenameArgs {
+	optional Path oldname = 1;
+	optional Path newname = 2;
+}
+
