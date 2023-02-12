@@ -4,6 +4,11 @@
 #include <fstream>
 #include <iostream>
 #include <cstdio>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -14,10 +19,11 @@ using afs::Path;
 using afs::FileData;
 using afs::IOResult;
 using afs::AfsService;
+using afs::StoreData;
 
 class AfsServiceImpl final : public AfsService::Service{
-    Status Fetch(ServerContext* context, const Path* filepath, ServerWriter<FileData>* writer){
-        std::string pathname = filepath->path();
+    Status Fetch(ServerContext* context, const Path* path, ServerWriter<FileData>* writer){
+        std::string pathname = path->name();
         int block_size = 8000;
         FILE* fp;
         fp = fopen(pathname.c_str(), "r");
@@ -49,6 +55,25 @@ class AfsServiceImpl final : public AfsService::Service{
         }
         fclose(fp);
         return Status::OK;
+    }
+
+    Status Store(ServerContext* context, const StoreData* storedata, IOResult* result){
+        std::string targetPath = (storedata->path()).name();
+        int targetfd = open(targetPath.c_str(), O_RDWR | O_CREAT, S_IRWXU);
+        if(targetfd == -1){
+            result->set_success(false);
+            result->set_err_message("Error while creating or opening target file");
+            return Status::OK;
+        }
+        std::string data = (storedata->filedata()).contents();
+        if(write(targetfd, &data[0], data.size()) == -1){
+            result->set_success(false);
+            result->set_err_message("Error while writing to target file");
+            return Status::OK;
+        }
+        close(targetfd);
+        result->set_success(true);
+        return Status::OK;     
     }
 };
 

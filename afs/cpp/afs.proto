@@ -5,11 +5,11 @@ option go_package = "github.com/SuhasHebbar/CS739-P1/afs";
 
 service AfsService {
 	rpc Fetch(Path) returns (stream FileData) {}
-	rpc Store(FileData) returns (IOResult) {}
+	rpc Store(StoreData) returns (IOResult) {}
 }
 
 message Path {
-	optional string path = 1;
+	optional string name = 1;
 }
 
 message FileData {
@@ -20,6 +20,11 @@ message FileData {
 message IOResult {
 	optional bool success = 1;
 	optional string err_message = 2;
+}
+
+message StoreData{
+	optional Path path = 1;
+	optional FileData filedata = 2;
 }
 
 
