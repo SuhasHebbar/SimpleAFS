@@ -52,6 +52,7 @@ set(UNRELIABLEFS_SRC conf.c
                      unreliablefs.c
                      unreliablefs_errinj.c
                      unreliablefs_ops.c
+                     afs_fuse_ops.cpp
                      afs_client.cpp)
 
 find_package(FUSE 2.9 REQUIRED)

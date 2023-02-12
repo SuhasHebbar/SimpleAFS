@@ -20,6 +20,8 @@
 
 #include "unreliablefs_ops.h"
 
+#include "afs_fuse_ops.h"
+
 const char *fuse_op_name[] = {
     "getattr",
     "readlink",
@@ -303,7 +305,7 @@ int unreliable_open(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
-    ret = open(path, fi->flags);
+    ret = afs_open(path, fi->flags);
     if (ret == -1) {
         return -errno;
     }
@@ -645,12 +647,13 @@ int unreliable_fsyncdir(const char *path, int datasync, struct fuse_file_info *f
 
 void *unreliable_init(struct fuse_conn_info *conn)
 {
+    afs_init();
     return NULL;
 }
 
 void unreliable_destroy(void *private_data)
 {
-
+    afs_destroy();
 }
 
 int unreliable_access(const char *path, int mode)
