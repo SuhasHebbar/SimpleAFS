@@ -68,8 +68,9 @@ class AfsServiceImpl final : public AfsService::Service{
         char tempPath[] = "/home/aliasgar/CS739-P1/afs/cpp/tmp/temp.XXXXXX";
         int tmpfd = mkstemp(tempPath);
         if(tmpfd == -1){
-            result->set_success(false);
-            std :: string err_message = strcat("Error while creating and opening a temp file: ", strerror(errno)); 
+            result->set_success(false); 
+            std :: string err_message = "Error while creating and opening a temp file: ";
+            err_message.append(strerror(errno)); 
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -78,7 +79,8 @@ class AfsServiceImpl final : public AfsService::Service{
             close(tmpfd);
             unlink(tempPath);
             result->set_success(false);
-            std :: string err_message = strcat("Error while writing to temp file: ", strerror(errno));
+            std :: string err_message = "Error while writing to temp file: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -89,7 +91,8 @@ class AfsServiceImpl final : public AfsService::Service{
             close(tmpfd);
             unlink(tempPath);
             result->set_success(false);
-            std :: string err_message = strcat("Error while creating target file: ", strerror(errno));
+            std :: string err_message = "Error while creating target file: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -97,7 +100,8 @@ class AfsServiceImpl final : public AfsService::Service{
             close(tmpfd);
             unlink(tempPath);
             result->set_success(false);
-            std :: string err_message = strcat("Error while swapping target file: ", strerror(errno));
+            std :: string err_message = "Error while swapping target file: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -112,7 +116,8 @@ class AfsServiceImpl final : public AfsService::Service{
         std::string pathname = path->name();
         if(unlink(pathname.c_str()) == -1){
             result->set_success(false);
-            std :: string err_message = strcat("Error while removing file: ", strerror(errno));
+            std :: string err_message = "Error while removing file: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -124,7 +129,8 @@ class AfsServiceImpl final : public AfsService::Service{
         std::string pathname = path->name();
         if(creat(pathname.c_str(), 00664) == -1){
             result->set_success(false);
-            std :: string err_message = strcat("Error while creating file: ", strerror(errno));
+            std :: string err_message = "Error while creating file: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -137,7 +143,8 @@ class AfsServiceImpl final : public AfsService::Service{
         std::string newpath = (args->newname()).name();
         if(rename(oldpath.c_str(), newpath.c_str()) == -1){
             result->set_success(false);
-            std :: string err_message = strcat("Error while renaming file: ", strerror(errno));
+            std :: string err_message = "Error while renaming file: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -149,7 +156,8 @@ class AfsServiceImpl final : public AfsService::Service{
         std::string pathname = path->name();
         if(mkdir(pathname.c_str(), 0664) == -1){
             result->set_success(false);
-            std :: string err_message = strcat("Error while creating directory: ", strerror(errno));
+            std :: string err_message = "Error while creating directory: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -161,7 +169,8 @@ class AfsServiceImpl final : public AfsService::Service{
         std::string pathname = path->name();
         if(rmdir(pathname.c_str()) == -1){
             result->set_success(false);
-            std :: string err_message = strcat("Error while removing directory: ", strerror(errno));
+            std :: string err_message = "Error while removing directory: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             return Status::OK;
         }
@@ -177,7 +186,8 @@ class AfsServiceImpl final : public AfsService::Service{
         if(dr == NULL){
             IOResult* result = new IOResult;
             result->set_success(false);
-            std :: string err_message = strcat("Error while opening directory: ", strerror(errno));
+            std :: string err_message = "Error while opening directory: ";
+            err_message.append(strerror(errno));
             result->set_err_message(err_message);
             statdata->set_allocated_status(result);
             return Status::OK;
