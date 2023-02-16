@@ -8,7 +8,7 @@ chmod 400 ~/.ssh/id_ed25519*
 sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"
 
 # sudo apt update
-sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu flex bison python-is-python3 python3-paramiko
+sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu flex bison python-is-python3 python3-paramiko nodejs npm hyperfine
 
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
 	echo Adding \$HOME/bin to path
@@ -22,7 +22,7 @@ if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
 	echo "export PATH=\$HOME/.local/bin:\$PATH" >> ~/.bashrc
 fi
 
-if [[ "x" == "x$(ls -ald fs)" ]]; then
+if [[ "" == "$(ls -ald fs)" ]]; then
 	git clone git@github.com:SuhasHebbar/CS739-P1.git fs
 fi
 
@@ -38,31 +38,34 @@ fi
 # fi
 
 
-if [[ "x" == "x$(which nvim)" ]]; then
+if [[ "" == "$(which nvim)" ]]; then
 	curl -L https://github.com/neovim/neovim/releases/latest/download/nvim.appimage -o ~/bin/nvim
 	chmod u+x ~/bin/nvim
 fi
 
-if [[ "x" == "x$(ls -ald ~/filebench)" ]]; then
+if [[ "" == "$(ls -ald ~/filebench)" ]]; then
 	# We're using the alpha version because the latest stable version does not have the ./configure script.
 	curl -L https://github.com/filebench/filebench/releases/download/1.5-alpha3/filebench-1.5-alpha3.zip -o ~/filebench.zip
 	unzip filebench.zip
 	mv filebench-1.5-alpha3 filebench
 	rm -rf filebench.zip
-	pushd ~/filebench
-	./configure --prefix=$HOME/.local
+	pushd ~/filebench || exit
+	./configure --prefix="$HOME/.local"
 	make
 	make install
-	popd
+	popd || exit
+
 fi
 
-if [[ "x" == "x$(ls -ald grpc)" ]]; then
+if [[ "" == "$(ls -ald grpc)" ]]; then
 	MY_INSTALL_DIR=~/.local/bin
 	mkdir -p $MY_INSTALL_DIR
 	git clone --recurse-submodules -b v1.50.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
-	pushd grpc
+	pushd grpc || exit
+
 	mkdir -p cmake/build
-	pushd cmake/build
+	pushd cmake/build || exit
+
 	cmake -DgRPC_INSTALL=ON \
 	      -DgRPC_BUILD_TESTS=OFF \
 	      -DCMAKE_INSTALL_PREFIX=$MY_INSTALL_DIR \
@@ -70,32 +73,37 @@ if [[ "x" == "x$(ls -ald grpc)" ]]; then
 	      ../..
 	make -j 20
 	make install
-	popd
-	popd
+	popd || exit
+
+	popd || exit
+
 fi
 
-if [[ "x" == "x$(ls -ald bench)" ]]; then
+if [[ "" == "$(ls -ald bench)" ]]; then
 	curl -L https://github.com/jingliu9/unreliablefs/archive/refs/heads/cs739.zip -O
 	unzip cs739.zip
 	rm -rf cs739.zip
 	mv unreliablefs-cs739 bench
 fi
 
-if [[ "x" == "x$(ls -ald xv6-public)" ]]; then
+if [[ "" == "$(ls -ald xv6-public)" ]]; then
 	git clone https://github.com/mit-pdos/xv6-public.git
 fi
 
 
-if [[ "x" == "x$(ls -ald leveldb)" ]]; then
+if [[ "" == "$(ls -ald leveldb)" ]]; then
 	git clone https://github.com/google/leveldb.git
-	pushd leveldb
+	pushd leveldb || exit
+
 	git submodule update --init
 	mkdir build
-	pushd build
+	pushd build || exit
+
 	cmake ..
 	make clean
-	popd
-	popd
+	popd || exit
+	popd || exit
+
 fi
 
 rm -rf ~/.config/nvim
