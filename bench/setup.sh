@@ -7,6 +7,11 @@ chmod 400 ~/.ssh/id_ed25519*
 # Value was 2 previously
 sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"
 
+if [[ "" == "$(ls setup_19.x)" ]]; then
+	curl -fsSL https://deb.nodesource.com/setup_19.x -O 
+	sudo -E bash setup_19.x
+fi
+
 # sudo apt update
 sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu flex bison python-is-python3 python3-paramiko nodejs npm hyperfine
 
