@@ -13,7 +13,8 @@ if [[ "" == "$(ls setup_19.x)" ]]; then
 fi
 
 # sudo apt update
-sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu flex bison python-is-python3 python3-paramiko nodejs npm hyperfine
+# sudo apt autoremove -y --purge
+sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu-system flex bison python-is-python3 python3-paramiko nodejs npm hyperfine ripgrep
 
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
 	echo Adding \$HOME/bin to path
