@@ -13,6 +13,8 @@
 #include "unreliablefs_ops.h"
 #include "unreliablefs.h"
 
+#include "afs_fuse_ops.h"
+
 extern struct err_inj_q *config_init(const char* conf_path);
 extern void config_delete(struct err_inj_q *config);
 
@@ -82,7 +84,8 @@ enum {
 
 static struct fuse_opt unreliablefs_opts[] = {
     UNRELIABLEFS_OPT("-seed=%u",           seed, 0),
-    UNRELIABLEFS_OPT("-basedir=%s",        basedir, 0),
+    UNRELIABLEFS_OPT("-cachedir=%s",       basedir, 0),
+    UNRELIABLEFS_OPT("-serveraddr=%s",     serveraddr, 0),
 
     FUSE_OPT_KEY("-d",             KEY_DEBUG),
     FUSE_OPT_KEY("-V",             KEY_VERSION),
@@ -108,7 +111,8 @@ static int unreliablefs_opt_proc(void *data, const char *arg, int key, struct fu
             "    -f                     foreground operation\n\n"
             "unreliablefs options:\n"
             "    -seed=NUM              random seed\n"
-            "    -basedir=STRING        directory to mount\n\n");
+            "    -cachedir=STRING       local cache directory \n\n"
+            "    -serveraddr=STRING     AFS address\n\n");
         exit(1);
 
     case KEY_VERSION:
@@ -129,15 +133,13 @@ int is_dir(const char *path) {
     return S_ISDIR(statbuf.st_mode);
 }
 
-void test_afs();
-
 int main(int argc, char *argv[])
 {
-    test_afs();
     struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
     memset(&conf, 0, sizeof(conf));
     conf.seed = time(0);
     conf.basedir = "/";
+    conf.serveraddr = "0.0.0.0:5000";
     fuse_opt_parse(&args, &conf, unreliablefs_opts, unreliablefs_opt_proc);
     srand(conf.seed);
     fprintf(stdout, "random seed = %d\n", conf.seed);
@@ -177,10 +179,18 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    // Make necesssary tmp directories and spawn AFS client
+    if (afs_fuse_setup(conf.serveraddr, conf.basedir) < 0) {
+        fuse_opt_free_args(&args); 
+	perror("afs_fuse_setup");
+	return EXIT_FAILURE;
+    }
+
     fprintf(stdout, "starting FUSE filesystem unreliablefs\n");
     int ret = fuse_main(args.argc, args.argv, &unreliable_ops, NULL);
 
     /* cleanup */
+    afs_fuse_teardown();
     fuse_opt_free_args(&args);
     config_delete(conf.errors);
     if (conf.config_path)
