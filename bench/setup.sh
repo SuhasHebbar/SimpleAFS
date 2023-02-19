@@ -14,7 +14,7 @@ fi
 
 # sudo apt update
 # sudo apt autoremove -y --purge
-sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu-system flex bison python-is-python3 python3-paramiko nodejs npm hyperfine ripgrep
+sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu-system flex bison python-is-python3 python3-paramiko nodejs npm hyperfine ripgrep trash-cli
 
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
 	echo Adding \$HOME/bin to path
