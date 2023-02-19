@@ -101,7 +101,7 @@ int unreliable_getattr(const char *path, struct stat *buf)
     }
 
     memset(buf, 0, sizeof(struct stat));
-    if (lstat(path, buf) == -1) {
+    if (afs_fuse_lstat(path, buf) == -1) {
         return -errno;
     }
 
@@ -152,7 +152,7 @@ int unreliable_mkdir(const char *path, mode_t mode)
         return ret;
     }
 
-    ret = mkdir(path, mode);
+    ret = afs_fuse_mkdir(path, mode);
     if (ret == -1) {
         return -errno;
     }
@@ -169,7 +169,7 @@ int unreliable_unlink(const char *path)
         return ret;
     }
 
-    ret = unlink(path); 
+    ret = afs_fuse_unlink(path); 
     if (ret == -1) {
         return -errno;
     }
@@ -186,7 +186,7 @@ int unreliable_rmdir(const char *path)
         return ret;
     }
 
-    ret = rmdir(path); 
+    ret = afs_fuse_rmdir(path); 
     if (ret == -1) {
         return -errno;
     }
@@ -220,7 +220,7 @@ int unreliable_rename(const char *oldpath, const char *newpath)
         return ret;
     }
 
-    ret = rename(oldpath, newpath);
+    ret = afs_fuse_rename(oldpath, newpath);
     if (ret == -1) {
         return -errno;
     }
@@ -288,7 +288,7 @@ int unreliable_truncate(const char *path, off_t length)
         return ret;
     }
 
-    ret = truncate(path, length); 
+    ret = afs_fuse_truncate(path, length); 
     if (ret == -1) {
         return -errno;
     }
@@ -305,7 +305,7 @@ int unreliable_open(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
-    ret = afs_open(path, fi->flags);
+    ret = afs_fuse_open(path, fi->flags);
     if (ret == -1) {
         return -errno;
     }
@@ -327,7 +327,7 @@ int unreliable_read(const char *path, char *buf, size_t size, off_t offset,
     int fd;
 
     if (fi == NULL) {
-	fd = open(path, O_RDONLY);
+	fd = afs_fuse_open(path, O_RDONLY);
     } else {
 	fd = fi->fh;
     }
@@ -342,7 +342,7 @@ int unreliable_read(const char *path, char *buf, size_t size, off_t offset,
     }
 
     if (fi == NULL) {
-	close(fd);
+	afs_fuse_close(fd, path);
     }
 
     return ret;
@@ -361,7 +361,7 @@ int unreliable_write(const char *path, const char *buf, size_t size,
     int fd;
     (void) fi;
     if(fi == NULL) {
-	fd = open(path, O_WRONLY);
+	fd = afs_fuse_open(path, O_WRONLY);
     } else {
 	fd = fi->fh;
     }
@@ -376,7 +376,7 @@ int unreliable_write(const char *path, const char *buf, size_t size,
     }
 
     if(fi == NULL) {
-        close(fd);
+        afs_fuse_close(fd, path);
     }
 
     return ret;
@@ -391,7 +391,7 @@ int unreliable_statfs(const char *path, struct statvfs *buf)
         return ret;
     }
 
-    ret = statvfs(path, buf);
+    ret = afs_fuse_statvfs(path, buf);
     if (ret == -1) {
         return -errno;
     }
@@ -425,7 +425,7 @@ int unreliable_release(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
-    ret = close(fi->fh);
+    ret = afs_fuse_close(fi->fh, path);
     if (ret == -1) {
         return -errno;
     }
@@ -554,7 +554,7 @@ int unreliable_opendir(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
-    DIR *dir = opendir(path);
+    DIR *dir = afs_fuse_opendir(path);
 
     if (!dir) {
         return -errno;
@@ -574,7 +574,7 @@ int unreliable_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         return ret;
     }
 
-    DIR *dp = opendir(path);
+    DIR *dp = afs_fuse_opendir(path);
     if (dp == NULL) {
 	return -errno;
     }
@@ -647,13 +647,12 @@ int unreliable_fsyncdir(const char *path, int datasync, struct fuse_file_info *f
 
 void *unreliable_init(struct fuse_conn_info *conn)
 {
-    afs_init();
     return NULL;
 }
 
 void unreliable_destroy(void *private_data)
 {
-    afs_destroy();
+
 }
 
 int unreliable_access(const char *path, int mode)
@@ -665,7 +664,7 @@ int unreliable_access(const char *path, int mode)
         return ret;
     }
 
-    ret = access(path, mode); 
+    ret = afs_fuse_access(path, mode); 
     if (ret == -1) {
         return -errno;
     }
@@ -683,7 +682,7 @@ int unreliable_create(const char *path, mode_t mode,
         return ret;
     }
 
-    ret = open(path, fi->flags, mode);
+    ret = afs_fuse_creat(path, fi->flags, mode);
     if (ret == -1) {
         return -errno;
     }

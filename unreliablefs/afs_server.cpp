@@ -16,6 +16,7 @@ using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
+using grpc::ServerReader;
 using afs::Path;
 using afs::FileData;
 using afs::IOResult;
@@ -29,153 +30,149 @@ using afs::StatData;
 
 using google::protobuf::Timestamp;
 
-static char SERVER_PATH[] = "/home/aliasgar/CS739-P1/afs/cpp/";
+// Disable debug logs in release builds
+#ifdef NDEBUG
+#  define D(x)
+#else
+#  define D(x) x
+#endif
+
+static const int BLOCK_SIZE = 1 << 13;
+static char iobuf[BLOCK_SIZE];
 
 class AfsServiceImpl final : public AfsService::Service{
     Status Fetch(ServerContext* context, const Path* path, ServerWriter<FileData>* writer){
-        std::string pathname = SERVER_PATH + path->name();
-        int block_size = 8000;
+        std::string pathname = basedir_ + "/" + path->name();
         FILE* fp;
         fp = fopen(pathname.c_str(), "r");
         if(fp == NULL){
-            IOResult* result = new IOResult;
-            result->set_success(false);
-            std :: string err_message = "Error while opening file: ";
-            err_message.append(strerror(errno)); 
-            result->set_err_message(err_message);
+            int err_code = errno;
             FileData filedata;
-            filedata.set_allocated_status(result);
+            auto status = filedata.mutable_status();
+            status->set_success(false);
+            status->set_err_code(err_code);
             writer->Write(filedata);
             return Status::OK;
         }
         while(!feof(fp)){
-            IOResult* result = new IOResult;
             FileData filedata;
-            std::string data(block_size, '\0');
-            fread(&data[0], block_size, 1, fp);
+            auto status = filedata.mutable_status();
+            int datalen = fread(iobuf, 1, sizeof(iobuf), fp);
             if(ferror(fp)){
-                result->set_success(false);
-                std :: string err_message = "Error while reading file: ";
-                err_message.append(strerror(errno)); 
-                result->set_err_message(err_message);
-                filedata.set_allocated_status(result);
+                status->set_err_code(errno);
+                status->set_success(false);
                 writer->Write(filedata);
+		fclose(fp);
                 return Status::OK;
             }
-            filedata.set_contents(data);
-            result->set_success(true);
-            filedata.set_allocated_status(result);
+            status->set_success(true);
+            filedata.set_contents(std::string(iobuf, datalen));
             writer->Write(filedata);
         }
+        // TODO: Handle close failure
         fclose(fp);
         return Status::OK;
     }
 
-    Status Store(ServerContext* context, const StoreData* storedata, StoreResult* result){
+    Status Store(ServerContext* context, ServerReader<StoreData> *reader, StoreResult* result){
+        // Read filepath of the contents
+        StoreData metadata;
+        if (!reader->Read(&metadata)) {
+            auto status = result->mutable_status();
+            status->set_success(false);
+            status->set_err_code(ENOLINK);
+            return Status::OK;
+        }
+        std::string targetPath = basedir_ + "/" + metadata.path().name();
+
         // Writing to a temp file
-        char tempPath[10000] = {'\0'};
-        strcpy(tempPath,SERVER_PATH);
-        strcat(tempPath,"/tmp/temp.XXXXXX");
+        char tempPath[] = "/tmp/afs/server/store.XXXXXX";
         int tmpfd = mkstemp(tempPath);
-        IOResult* status = new IOResult;
         if(tmpfd == -1){
-            status->set_success(false); 
-            std :: string err_message = "Error while creating and opening a temp file: ";
-            err_message.append(strerror(errno)); 
-            status->set_err_message(err_message);
-            result->set_allocated_status(status);
-            return Status::OK;
-        }
-        const char* data = (storedata->filedata()).contents().c_str();
-        if(write(tmpfd, data, strlen(data)) == -1){
-            close(tmpfd);
-            unlink(tempPath);
+            auto status = result->mutable_status();
+            status->set_err_code(errno);
             status->set_success(false);
-            std :: string err_message = "Error while writing to temp file: ";
-            err_message.append(strerror(errno));
-            status->set_err_message(err_message);
-            result->set_allocated_status(status);
             return Status::OK;
         }
 
-        // Swapping temp file with target file
-        std::string targetPath = SERVER_PATH + (storedata->path()).name();
-        if(creat(targetPath.c_str(), 00664) == -1){
-            close(tmpfd);
-            unlink(tempPath);
-            status->set_success(false);
-            std :: string err_message = "Error while creating target file: ";
-            err_message.append(strerror(errno));
-            status->set_err_message(err_message);
-            result->set_allocated_status(status);
-            return Status::OK;
+        StoreData storedata;
+        while (reader->Read(&storedata)) {
+            const char* data = storedata.filedata().contents().c_str();
+            auto datalen = storedata.filedata().contents().size();
+            if (write(tmpfd, data, datalen) < 0) {
+                int err_code = errno;
+                close(tmpfd);
+                unlink(tempPath);
+                auto status = result->mutable_status();
+                status->set_success(false);
+                status->set_err_code(err_code);
+                return Status::OK;
+            }
         }
-        if(rename(tempPath, targetPath.c_str()) == -1){
-            close(tmpfd);
-            unlink(tempPath);
-            status->set_success(false);
-            std :: string err_message = "Error while swapping target file: ";
-            err_message.append(strerror(errno));
-            status->set_err_message(err_message);
-            result->set_allocated_status(status);
-            return Status::OK;
-        }
-        
+
         close(tmpfd);
-        unlink(tempPath);
 
-        struct stat* statbuf = new struct stat;
-        if(stat(targetPath.c_str(), statbuf) == -1){
+        if (rename(tempPath, targetPath.c_str()) < 0) {
+            int err_code = errno;
+            unlink(tempPath);
+            auto status = result->mutable_status();
             status->set_success(false);
-            std :: string err_message = "Error while retrieving modified time: ";
-            err_message.append(strerror(errno));
-            status->set_err_message(err_message);
-            result->set_allocated_status(status);
+            status->set_err_code(err_code);
             return Status::OK;
         }
+
+        struct stat statbuf;
+        if (stat(targetPath.c_str(), &statbuf) < 0) {
+            auto status = result->mutable_status();
+            status->set_err_code(errno);
+            status->set_success(false);
+            unlink(targetPath.c_str());
+            return Status::OK;
+        }
+
+        auto status = result->mutable_status();
         status->set_success(true);
-        result->set_allocated_status(status);
-        Timestamp* lmtime = new Timestamp;
-        lmtime->set_seconds(statbuf->st_mtim.tv_sec);
-        lmtime->set_nanos(statbuf->st_mtim.tv_nsec);
-        result->set_allocated_lmtime(lmtime);
-        return Status::OK;   
+        auto lmtime = result->mutable_lmtime();
+#ifdef __APPLE__
+        lmtime->set_seconds(statbuf.st_mtime);
+        lmtime->set_nanos(0);
+#else
+        lmtime->set_seconds(statbuf.st_mtim.tv_sec);
+        lmtime->set_nanos(statbuf.st_mtim.tv_nsec);
+#endif
+        return Status::OK;
     }
 
     Status Remove(ServerContext* context, const Path* path, IOResult* result){
-        std::string pathname = SERVER_PATH + path->name();
+        std::string pathname = basedir_ + "/" + path->name();
         if(unlink(pathname.c_str()) == -1){
+            result->set_err_code(errno);
             result->set_success(false);
-            std :: string err_message = "Error while removing file: ";
-            err_message.append(strerror(errno));
-            result->set_err_message(err_message);
             return Status::OK;
         }
         result->set_success(true);
-        return Status::OK;  
+        return Status::OK;
     }
 
     Status Create(ServerContext* context, const Path* path, IOResult* result){
-        std::string pathname = SERVER_PATH + path->name();
-        if(creat(pathname.c_str(), 00664) == -1){
+        std::string pathname = basedir_ + "/" + path->name();
+	int fd = creat(pathname.c_str(), 0744);
+        if (fd < 0) {
+            result->set_err_code(errno);
             result->set_success(false);
-            std :: string err_message = "Error while creating file: ";
-            err_message.append(strerror(errno));
-            result->set_err_message(err_message);
             return Status::OK;
         }
+	close(fd);
         result->set_success(true);
-        return Status::OK;  
+        return Status::OK;
     }
 
     Status Rename(ServerContext* context, const RenameArgs* args, IOResult* result){
-        std::string oldpath = SERVER_PATH + (args->oldname()).name();
-        std::string newpath = SERVER_PATH + (args->newname()).name();
-        if(rename(oldpath.c_str(), newpath.c_str()) == -1){
+        std::string oldpath = basedir_ + "/" + (args->oldname()).name();
+        std::string newpath = basedir_ + "/" + (args->newname()).name();
+        if (rename(oldpath.c_str(), newpath.c_str()) < 0) {
+            result->set_err_code(errno);
             result->set_success(false);
-            std :: string err_message = "Error while renaming file: ";
-            err_message.append(strerror(errno));
-            result->set_err_message(err_message);
             return Status::OK;
         }
         result->set_success(true);
@@ -183,12 +180,10 @@ class AfsServiceImpl final : public AfsService::Service{
     }
 
     Status Makedir(ServerContext* context, const Path* path, IOResult* result){
-        std::string pathname = SERVER_PATH + path->name();
-        if(mkdir(pathname.c_str(), 0664) == -1){
+        std::string pathname = basedir_ + "/" + path->name();
+        if (mkdir(pathname.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
+            result->set_err_code(errno);
             result->set_success(false);
-            std :: string err_message = "Error while creating directory: ";
-            err_message.append(strerror(errno));
-            result->set_err_message(err_message);
             return Status::OK;
         }
         result->set_success(true);
@@ -196,12 +191,10 @@ class AfsServiceImpl final : public AfsService::Service{
     }
 
     Status Removedir(ServerContext* context, const Path* path, IOResult* result){
-        std::string pathname = SERVER_PATH + path->name();
-        if(rmdir(pathname.c_str()) == -1){
+        std::string pathname = basedir_ + "/" + path->name();
+        if (rmdir(pathname.c_str()) < 0) {
+            result->set_err_code(errno);
             result->set_success(false);
-            std :: string err_message = "Error while removing directory: ";
-            err_message.append(strerror(errno));
-            result->set_err_message(err_message);
             return Status::OK;
         }
         result->set_success(true);
@@ -209,70 +202,90 @@ class AfsServiceImpl final : public AfsService::Service{
     }
 
     Status TestAuth(ServerContext* context, const Path* path, AuthData* authdata){
-        std::string pathname = SERVER_PATH + path->name();
-        struct stat* statbuf = new struct stat;
-        IOResult* result = new IOResult;
-        if(stat(pathname.c_str(), statbuf) == -1){
-            result->set_success(false);
-            std :: string err_message = "Error while retrieving modified time: ";
-            err_message.append(strerror(errno));
-            result->set_err_message(err_message);
-            authdata->set_allocated_status(result);
+        std::string pathname = basedir_ + "/" + path->name();
+        struct stat statbuf;
+        auto status = authdata->mutable_status();
+        if (stat(pathname.c_str(), &statbuf) < 0) {
+            status->set_err_code(errno);
+            status->set_success(false);
             return Status::OK;
         }
-        result->set_success(true);
-        authdata->set_allocated_status(result);
-        Timestamp* lmtime = new Timestamp;
-        lmtime->set_seconds(statbuf->st_mtim.tv_sec);
-        lmtime->set_nanos(statbuf->st_mtim.tv_nsec);
-        authdata->set_allocated_lmtime(lmtime);
+        status->set_success(true);
+        auto lmtime = authdata->mutable_lmtime();
+#ifdef __APPLE__
+        lmtime->set_seconds(statbuf.st_mtime);
+        lmtime->set_nanos(0);
+#else
+        lmtime->set_seconds(statbuf.st_mtim.tv_sec);
+        lmtime->set_nanos(statbuf.st_mtim.tv_nsec);
+#endif
+        authdata->set_mode(statbuf.st_mode);
         return Status::OK;
     }
 
-    Status GetFileStat(ServerContext* context, const Path* path, StatData* statdata ){
-        std::string pathname = SERVER_PATH + path->name();
+    Status GetFileStat(ServerContext* context, const Path* path, StatData* statdata) {
+        std::string pathname = basedir_ + "/" + path->name();
         struct dirent* dentry;
-        
+
         DIR* dr = opendir(pathname.c_str());
         if(dr == NULL){
-            IOResult* result = new IOResult;
-            result->set_success(false);
-            std :: string err_message = "Error while opening directory: ";
-            err_message.append(strerror(errno));
-            result->set_err_message(err_message);
-            statdata->set_allocated_status(result);
+            auto status = statdata->mutable_status();
+            status->set_err_code(errno);
+            status->set_success(false);
             return Status::OK;
         }
-        DirectoryData* dd = new DirectoryData;
+        auto dd = statdata->mutable_dd();
         while((dentry = readdir(dr)) != NULL){
             dd->add_files(dentry->d_name);
         }
-        statdata->set_allocated_dd(dd);
         closedir(dr);
-        IOResult* result = new IOResult;
-        result->set_success(true);
-        statdata->set_allocated_status(result);
+        auto status = statdata->mutable_status();
+        status->set_success(true);
         return Status::OK;
     }
+
+    std::string basedir_;
+
+public:
+    AfsServiceImpl(std::string const& basedir) : basedir_(basedir) {}
 };
 
-void RunServer() {
-    std::string server_address{"0.0.0.0:5000"};
-    AfsServiceImpl service;
+void RunServer(std::string const& basedir, std::string const& addr) {
+    AfsServiceImpl service{basedir};
 
     // Build server
     ServerBuilder builder;
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    builder.AddListeningPort(addr, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
     std::unique_ptr<Server> server{builder.BuildAndStart()};
 
     // Run server
-    std::cout << "Server listening on " << server_address << std::endl;
+    std::cout << "Server listening on " << addr << std::endl;
     server->Wait();
 }
 
 int main(int argc, char** argv) {
-    RunServer();
+    if (argc < 2 || argc > 3) {
+        std::cout << "Usage: ./server <basedir> [<addr>]" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    if (mkdir("/tmp/afs", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0 && errno != EEXIST) {
+   	perror("tmp setup");
+	return EXIT_FAILURE;
+    }
+
+    if (mkdir("/tmp/afs/server", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0 && errno != EEXIST) {
+   	perror("tmp setup");
+	return EXIT_FAILURE;
+    }
+
+    std::string basedir{argv[1]};
+    std::string addr = "0.0.0.0:5000";
+    if (argc > 2) {
+        addr = std::string(argv[2]);
+    }
+    RunServer(basedir, addr);
     return 0;
 }
 

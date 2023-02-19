@@ -3,3 +3,5 @@ debug
 release
 compile_commands.json
 .vscode
+mntdir
+.cache

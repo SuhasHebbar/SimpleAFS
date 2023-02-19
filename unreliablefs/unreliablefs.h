@@ -13,6 +13,7 @@ typedef struct unreliablefs_config {
      unsigned int      seed;
      unsigned int      debug;
      pthread_mutex_t   mutex;
+     const char *serveraddr;
 } unreliablefs_config;
 
 #endif /* UNRELIABLEFS_HH */

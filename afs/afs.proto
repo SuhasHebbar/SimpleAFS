@@ -7,7 +7,7 @@ option go_package = "github.com/SuhasHebbar/CS739-P1/afs";
 
 service AfsService {
 	rpc Fetch(Path) returns (stream FileData) {}
-	rpc Store(StoreData) returns (StoreResult) {}
+	rpc Store(stream StoreData) returns (StoreResult) {}
 	rpc Remove(Path) returns  (IOResult) {}
 	rpc Create(Path) returns  (IOResult) {}
 	rpc Rename(RenameArgs) returns (IOResult) {}
@@ -28,7 +28,7 @@ message FileData {
 
 message IOResult {
 	optional bool success = 1;
-	optional string err_message = 2;
+	optional int32 err_code = 2;
 }
 
 message StoreData{
@@ -44,6 +44,7 @@ message StoreResult{
 message AuthData {
 	optional google.protobuf.Timestamp lmtime = 1;
 	optional IOResult status = 2;
+    optional uint32 mode = 3;
 }
 
 message StatData {
