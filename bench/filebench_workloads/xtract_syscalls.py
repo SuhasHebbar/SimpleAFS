@@ -61,7 +61,7 @@ with open('stdout.log', 'r') as f:
 
 print(ops)
 
-print(', '.join(list(ops)))
+print('\n'.join(sorted(list(ops))))
 print('{0:b}'.format(open_flags))
 
 
