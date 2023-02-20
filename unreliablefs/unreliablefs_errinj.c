@@ -205,6 +205,12 @@ int error_inject(const char* path, fuse_op operation)
         case ERRINJ_NOOP:
             rc = -ERRNO_NOOP;
             break;
+	case ERRINJ_ALICE_DELAY:
+	    rc = -ERRNO_ERRINJ_ALICE_DELAY;
+	    break;
+	case ERRINJ_ALICE_REORDER:
+	    rc = -ERRNO_ERRINJ_ALICE_REORDER;
+	    break;
         case ERRINJ_KILL_CALLER: ;
             struct fuse_context *cxt = fuse_get_context();
             if (cxt) {
