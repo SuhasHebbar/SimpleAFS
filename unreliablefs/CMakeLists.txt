@@ -71,7 +71,7 @@ target_link_libraries(${AFS_SERVER_EXECUTABLE} afs_grpc_proto ${_REFLECTION} ${_
 
 foreach(_target ${AFS_CLIENT_EXECUTABLE} ${AFS_SERVER_EXECUTABLE})
   target_compile_options(${_target} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused-parameter)
-  target_compile_options(${_target} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
+  target_compile_options(${_target} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -D_FILE_OFFSET_BITS=64>)
 endforeach()
 
 
