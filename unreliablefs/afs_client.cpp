@@ -166,7 +166,7 @@ int AfsClient::fetchRegular(std::string const& remotepath) {
 	return -1;
     }
 
-    std::string localpath = cachedir_ + "/" + remotepath;
+    std::string localpath = cachedir_ + remotepath;
 
     if (rename(tmpfname, localpath.c_str()) < 0) {
 	D(perror(__FILE__ ":" EXPAND(__LINE__));)
@@ -219,7 +219,7 @@ int AfsClient::fetchDirectory(std::string const& remotepath) {
 	    continue;
 	}
 
-        auto authdata = TestAuth(remotepath + "/" + entry);
+        auto authdata = TestAuth(remotepath + entry);
         if (!authdata.status().success()) {
             errno = authdata.status().err_code();
 	    D(perror(__FILE__ ":" EXPAND(__LINE__));)
@@ -227,7 +227,7 @@ int AfsClient::fetchDirectory(std::string const& remotepath) {
 	    break;
         }
 
-        auto tmpentry = tmppath + "/" + entry;
+        auto tmpentry = tmppath + entry;
 
 	// Check if the entry is a regular file and create the file
 	if (S_ISREG(authdata.mode())) {
@@ -262,7 +262,7 @@ int AfsClient::fetchDirectory(std::string const& remotepath) {
 	return -1;
     }
 
-    auto localpath = cachedir_ + "/" + remotepath;
+    auto localpath = cachedir_ + remotepath;
 
     // Here we use an empty directory to sink our current directory
     // We avoid failing when the localpath is not yet created
@@ -293,7 +293,7 @@ int AfsClient::fetchDirectory(std::string const& remotepath) {
 }
 
 int AfsClient::Fetch(std::string const& remotepath) {
-    std::string const localpath = cachedir_ + "/" + remotepath;
+    std::string const localpath = cachedir_ + remotepath;
 
     struct stat statbuf;
     int ret = lstat(localpath.c_str(), &statbuf);
@@ -366,7 +366,7 @@ int AfsClient::Store(std::string const& remotepath){
     }
 
     // Open file for reading
-    auto localpath = cachedir_ + "/" + remotepath;
+    auto localpath = cachedir_ + remotepath;
     auto fp = fopen(localpath.c_str(), "r");
     if (!fp) {
 	D(perror(__FILE__ ":" EXPAND(__LINE__));)
@@ -554,7 +554,7 @@ AuthData AfsClient::TestAuth(std::string const& remotepath) {
     Status status = stub_->TestAuth(&context, path, &authdata);
     if (!status.ok()) {
         // Emulate server on server failures
-        auto localpath = cachedir_ + "/" + remotepath;
+        auto localpath = cachedir_ + remotepath;
         struct stat statbuf;
         auto status = authdata.mutable_status();
         if (lstat(localpath.c_str(), &statbuf) < 0) {
