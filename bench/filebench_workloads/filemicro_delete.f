@@ -29,7 +29,7 @@
 # Fire off 16 threads ($nthreads), where each thread stops after
 # deleting 1000 ($count) files.
 
-set $dir=/users/hebbar2/unreliablefs/mnt/
+set $dir=/users/hebbar2/dirs/mnt
 set $count=10000
 set $filesize=16k
 set $nfiles=50000
