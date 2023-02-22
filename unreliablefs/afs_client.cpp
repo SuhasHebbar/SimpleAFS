@@ -377,6 +377,7 @@ int AfsClient::Store(std::string const& remotepath){
     while (!feof(fp)) {
         int datalen = fread(iobuf, 1, sizeof(iobuf), fp);
 	if (ferror(fp)) {
+	    fclose(fp);
             D(perror(__FILE__ ":" EXPAND(__LINE__));)
 	    store_err_code = errno;
 
