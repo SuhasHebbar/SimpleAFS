@@ -5,3 +5,7 @@ compile_commands.json
 .vscode
 mntdir
 .cache
+bench/out
+bench/id_ed25519*
+*.log
+*.out

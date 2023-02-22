@@ -70,28 +70,28 @@ target_link_libraries(${AFS_CLIENT_EXECUTABLE} ${FUSE_LIBRARIES} afs_grpc_proto 
 add_executable(${AFS_SERVER_EXECUTABLE} afs_server.cpp)
 target_link_libraries(${AFS_SERVER_EXECUTABLE} afs_grpc_proto ${_REFLECTION} ${_GRPC_GRPCPP} ${_PROTOBUF_LIBPROTOBUF})
 
-target_compile_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused-parameter)
-target_compile_options(${AFS_CLIENT_EXECUTABLE} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
+foreach(_target ${AFS_CLIENT_EXECUTABLE} ${AFS_SERVER_EXECUTABLE})
+  target_compile_options(${_target} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused-parameter)
+  target_compile_options(${_target} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++20 -D_FILE_OFFSET_BITS=64>)
+endforeach()
 
-target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC -D_FILE_OFFSET_BITS=64 -Wall -Wextra -Wno-unused-parameter)
-target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++11 -D_FILE_OFFSET_BITS=64>)
 
 option(ENABLE_ASAN "Enable AddressSanitizer, a fast memory error detector
                     based on compiler instrumentation" OFF)
 if(ENABLE_ASAN)
-    target_compile_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=address)
-    target_link_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=address)
-    target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=address)
-    target_link_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=address)
+  foreach(_target ${AFS_CLIENT_EXECUTABLE} ${AFS_SERVER_EXECUTABLE})
+    target_compile_options(${_target} PUBLIC -fsanitize=address)
+    target_link_options(${_target} PUBLIC -fsanitize=address)
+  endforeach()
 endif()
 
 option(ENABLE_UBSAN "Enable UBSanitizer, undefined behaviour
                      detector based on compiler instrumentation" OFF)
 if(ENABLE_UBSAN)
-    target_compile_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=undefined)
-    target_link_options(${AFS_CLIENT_EXECUTABLE} PUBLIC -fsanitize=undefined)
-    target_compile_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=undefined)
-    target_link_options(${AFS_SERVER_EXECUTABLE} PUBLIC -fsanitize=undefined)
+  foreach(_target ${AFS_CLIENT_EXECUTABLE} ${AFS_SERVER_EXECUTABLE})
+    target_compile_options(${_target} PUBLIC -fsanitize=undefined)
+    target_link_options(${_target} PUBLIC -fsanitize=undefined)
+  endforeach()
 endif()
 
 
