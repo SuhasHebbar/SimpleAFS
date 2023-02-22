@@ -1,3 +1,4 @@
+#include "common.h"
 #include "unreliablefs_ops.h"
 #define FUSE_USE_VERSION 29
 
