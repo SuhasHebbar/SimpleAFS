@@ -22,7 +22,7 @@ message Path {
 }
 
 message FileData {
-	optional string contents = 1; 
+	optional bytes contents = 1; 
 	optional IOResult status = 2;
 }
 
