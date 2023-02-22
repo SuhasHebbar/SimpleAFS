@@ -1,3 +1,4 @@
+#include "unreliablefs_ops.h"
 #define FUSE_USE_VERSION 29
 
 #include <fuse.h>
@@ -164,6 +165,7 @@ static int rand_range(int min_n, int max_n)
 
 int error_inject(const char* path, fuse_op operation)
 {
+    DEBUG("Operation: %s, Path: %s\n", fuse_op_name[operation], path);
     /* instead of returning an error in 'errno', the operation should return
      * the negated error value (-errno) directly.
      */
