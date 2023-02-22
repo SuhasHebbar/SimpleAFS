@@ -29,7 +29,7 @@
 # (i.e., 8MB written) fsync is called.
 # The run finishes after 1GB is fully written.
 
-set $dir=/users/hebbar2/unreliablefs/mnt/
+set $dir=/users/hebbar2/dirs/mnt
 set $iosize=8k
 set $writeiters=1024
 set $fsynccount=128
