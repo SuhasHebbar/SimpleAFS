@@ -219,7 +219,7 @@ int AfsClient::fetchDirectory(std::string const& remotepath) {
 	    continue;
 	}
 
-        auto authdata = TestAuth(remotepath + entry);
+        auto authdata = TestAuth(remotepath + "/" + entry);
         if (!authdata.status().success()) {
             errno = authdata.status().err_code();
 	    D(perror(__FILE__ ":" EXPAND(__LINE__));)
@@ -227,7 +227,7 @@ int AfsClient::fetchDirectory(std::string const& remotepath) {
 	    break;
         }
 
-        auto tmpentry = tmppath + entry;
+        auto tmpentry = tmppath + "/" + entry;
 
 	// Check if the entry is a regular file and create the file
 	if (S_ISREG(authdata.mode())) {
