@@ -254,10 +254,10 @@ int unreliable_chmod(const char *path, mode_t mode)
         return ret;
     }
     
-    ret = chmod(path, mode);
-    if (ret < 0) {
-        return -errno;
-    }
+    // ret = chmod(path, mode);
+    // if (ret < 0) {
+    //     return -errno;
+    // }
 
     return 0;
 }
