@@ -1,4 +1,5 @@
 #include <grpc++/grpc++.h>
+#include "common.h"
 #include "afs.grpc.pb.h"
 #include <string>
 #include <fstream>
@@ -202,6 +203,7 @@ class AfsServiceImpl final : public AfsService::Service{
     }
 
     Status TestAuth(ServerContext* context, const Path* path, AuthData* authdata){
+	DEBUG("TestAuth on %s\n", path->name().c_str());
         std::string pathname = basedir_ + "/" + path->name();
         struct stat statbuf;
         auto status = authdata->mutable_status();
@@ -220,10 +222,12 @@ class AfsServiceImpl final : public AfsService::Service{
         lmtime->set_nanos(statbuf.st_mtim.tv_nsec);
 #endif
         authdata->set_mode(statbuf.st_mode);
+	DEBUG("%s has st_mode %d", path->name().c_str(), statbuf.st_mode);
         return Status::OK;
     }
 
     Status GetFileStat(ServerContext* context, const Path* path, StatData* statdata) {
+	DEBUG("FileStat on %s\n", path->name().c_str());
         std::string pathname = basedir_ + "/" + path->name();
         struct dirent* dentry;
 
@@ -265,6 +269,7 @@ void RunServer(std::string const& basedir, std::string const& addr) {
 }
 
 int main(int argc, char** argv) {
+    DEBUG("DEBUG works!\n");
     if (argc < 2 || argc > 3) {
         std::cout << "Usage: ./server <basedir> [<addr>]" << std::endl;
         return EXIT_FAILURE;
