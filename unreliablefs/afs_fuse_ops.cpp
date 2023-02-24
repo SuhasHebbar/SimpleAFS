@@ -32,27 +32,27 @@ int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
 void afs_fuse_teardown() { g_afsClient.reset(); }
 
 int afs_fuse_lstat(const char *path, struct stat *buf) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_lstat(path, buf);
 }
 
 int afs_fuse_mkdir(const char *path, mode_t mode) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_mkdir(path, mode);
 }
 
 int afs_fuse_rmdir(const char *path) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_rmdir(path);
 }
 
 int afs_fuse_rename(const char *oldpath, const char *newpath) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_rename(oldpath, newpath);
 }
 
 int afs_fuse_truncate(const char *path, off_t length) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   std::cout << __FILE__ << " " << __LINE__ << std::endl;
   int ret = g_afsClient->fuse_truncate(path, length);
   std::cout << __FILE__ << " " << __LINE__ << std::endl;
@@ -60,29 +60,29 @@ int afs_fuse_truncate(const char *path, off_t length) {
 }
 
 int afs_fuse_open(const char *path, int flags) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_open(path, flags);
 }
 
 int afs_fuse_creat(const char *path, int flags, mode_t mode) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_creat(path, flags, mode);
 }
 
 int afs_fuse_statvfs(const char *path, struct statvfs *buf) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_statvfs(path, buf);
 }
 
 DIR *afs_fuse_opendir(const char *path) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_opendir(path);
 }
 
 int afs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                      off_t offset, struct fuse_file_info *fi) {
 
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
 
   DIR *dp = g_afsClient->fuse_opendir(path);
   if (dp == nullptr) {
@@ -121,17 +121,17 @@ int afs_fuse_closedir(DIR* dp) {
 }
 
 int afs_fuse_close(int fd, const char *path) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_close(fd, path);
 }
 
 int afs_fuse_unlink(const char *path) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_unlink(path);
 }
 
 int afs_fuse_access(const char *path, int amode) {
-  std::lock_guard<std::mutex> guard{fuse_lock};
+  
   return g_afsClient->fuse_access(path, amode);
 }
 
