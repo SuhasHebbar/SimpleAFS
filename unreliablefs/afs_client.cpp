@@ -82,11 +82,11 @@ static std::string base64_encode(const std::string &in) {
         val = (val << 8) + c;
         valb += 8;
         while (valb >= 0) {
-            out.push_back("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[(val>>valb)&0x3F]);
+            out.push_back("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-"[(val>>valb)&0x3F]);
             valb -= 6;
         }
     }
-    if (valb>-6) out.push_back("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[((val<<8)>>(valb+8))&0x3F]);
+    if (valb>-6) out.push_back("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-"[((val<<8)>>(valb+8))&0x3F]);
     while (out.size()%4) out.push_back('=');
     return out;
 }
@@ -100,6 +100,7 @@ std::string getLocalPath(std::string const& cachedir, std::string const& remoteP
     hashPath += strHash[i];
   }
   hashPath = base64_encode(hashPath);
+  printf("local path for %s is %s\n", remotePath.c_str(), concatenatedPaths(cachedir, hashPath).c_str());
   return concatenatedPaths(cachedir, hashPath);
 }
 
@@ -589,7 +590,7 @@ int AfsClient::fuse_lstat(const char *path, struct stat *buf) {
     return -1;
   }
 
-  return lstat(path, buf);
+  return lstat(getLocalPath(cachedir_, getAFSPath(path)).c_str(), buf);
 }
 
 int AfsClient::fuse_mkdir(const char *path, mode_t mode) {
@@ -601,7 +602,7 @@ int AfsClient::fuse_mkdir(const char *path, mode_t mode) {
   //   because we are unsure of the presence of parent directories locally
   //   but avoiding that for simplicity
   // XXX: mode erased on next fetch
-  return mkdir(path, mode);
+  return mkdir(getLocalPath(cachedir_, getAFSPath(path)).c_str(), mode);
 }
 
 int AfsClient::fuse_rmdir(const char *path) {
@@ -609,7 +610,7 @@ int AfsClient::fuse_rmdir(const char *path) {
     return -1;
   }
 
-  return rmdir(path);
+  return rmdir(getLocalPath(cachedir_, getAFSPath(path)).c_str());
 }
 
 int AfsClient::fuse_rename(const char *oldpath, const char *newpath) {
@@ -617,11 +618,11 @@ int AfsClient::fuse_rename(const char *oldpath, const char *newpath) {
     return -1;
   }
 
-  return rename(oldpath, newpath);
+  return rename(getLocalPath(cachedir_, getAFSPath(oldpath)).c_str(), getLocalPath(cachedir_, getAFSPath(newpath)).c_str());
 }
 
 int AfsClient::fuse_truncate(const char *path, off_t length) {
-  if (truncate(path, length) < 0) {
+  if (truncate(getLocalPath(cachedir_, getAFSPath(path)).c_str(), length) < 0) {
     return -1;
   }
 
@@ -630,7 +631,7 @@ int AfsClient::fuse_truncate(const char *path, off_t length) {
 
 int AfsClient::fuse_open(const char *path, int flags) {
   if (flags & O_CREAT) {
-    return fuse_creat(path, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    return fuse_creat(getLocalPath(cachedir_, getAFSPath(path)).c_str(), flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
   }
 
   if (Fetch(getAFSPath(path)) < 0) {
@@ -638,7 +639,7 @@ int AfsClient::fuse_open(const char *path, int flags) {
   }
 
   flags &= ~O_EXCL;
-  return open(path, flags);
+  return open(getLocalPath(cachedir_, getAFSPath(path)).c_str(), flags);
 }
 
 int AfsClient::fuse_creat(const char *path, int flags, mode_t mode) {
@@ -653,7 +654,7 @@ int AfsClient::fuse_creat(const char *path, int flags, mode_t mode) {
   }
 
   flags &= ~O_EXCL;
-  return open(path, flags, mode);
+  return open(getLocalPath(cachedir_, getAFSPath(path)).c_str(), flags, mode);
 }
 
 int AfsClient::fuse_statvfs(const char *path, struct statvfs *buf) {
@@ -661,7 +662,7 @@ int AfsClient::fuse_statvfs(const char *path, struct statvfs *buf) {
     return -1;
   }
 
-  return statvfs(path, buf);
+  return statvfs(getLocalPath(cachedir_, getAFSPath(path)).c_str(), buf);
 }
 
 DIR *AfsClient::fuse_opendir(const char *path) {
@@ -710,7 +711,7 @@ int AfsClient::fuse_unlink(const char *path) {
     return -1;
   }
 
-  return unlink(path);
+  return unlink(getLocalPath(cachedir_, getAFSPath(path)).c_str());
 }
 
 int AfsClient::fuse_access(const char *path, int amode) {
@@ -718,5 +719,5 @@ int AfsClient::fuse_access(const char *path, int amode) {
     return -1;
   }
 
-  return access(path, amode);
+  return access(getLocalPath(cachedir_, getAFSPath(path)).c_str(), amode);
 }

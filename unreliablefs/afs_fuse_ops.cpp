@@ -9,7 +9,6 @@ namespace {
 
 std::unique_ptr<AfsClient> g_afsClient;
 
-std::mutex fuse_lock;
 } // anonymous namespace
 
 extern "C" {
