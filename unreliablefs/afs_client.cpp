@@ -221,10 +221,48 @@ int AfsClient::fetchRegular(std::string const &remotepath) {
 
 int AfsClient::fetchDirectory(std::string const &remotepath) {
   auto localpath = concatenatedPaths(cachedir_, remotepath);
-  if (mkdir(localpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
+  char tmpfname[] = "/tmp/afs/client/fetchdir.XXXXXX";
+  if (!mkdtemp(tmpfname)) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
     return -1;
   }
+  std::string tmppath = std::string(tmpfname);
+
+  // Empty directory created for the purposes of swapping
+  char sinkfname[] = "/tmp/afs/client/sinkdir.XXXXXX";
+  if (!mkdtemp(sinkfname)) {
+    int err_code = errno;
+    rmdir(tmpfname);
+    errno = err_code;
+    D(perror(__FILE__ ":" EXPAND(__LINE__));)
+    return -1;
+  }
+
+
+  // Here we use an empty directory to sink our current directory
+  // We avoid failing when the localpath is not yet created
+  if (rename(localpath.c_str(), sinkfname) < 0 && errno != ENOENT) {
+    D(perror(__FILE__ ":" EXPAND(__LINE__));)
+    int err_code = errno;
+    // XXX: tmpfname may be non-empty => not removed
+    rmdir(tmpfname);
+    rmdir(sinkfname);
+    errno = err_code;
+    return -1;
+  }
+
+  if (rename(tmpfname, localpath.c_str()) < 0) {
+    D(perror(__FILE__ ":" EXPAND(__LINE__));)
+    int err_code = errno;
+    // XXX: tmpfname, sinkfname may be non-empty => not removed
+    rmdir(tmpfname);
+    rmdir(sinkfname);
+    errno = err_code;
+    return -1;
+  }
+
+  // XXX: sinkfname may be non-empty => not removed
+  rmdir(sinkfname);
 
   return 0;
 }
@@ -254,7 +292,7 @@ int AfsClient::Fetch(std::string const &remotepath) {
   }
 
   // First, we make all the parent directories
-  if (makeParentDirs(remotepath) < 0) {
+  if (ret < 0 && makeParentDirs(remotepath) < 0) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
     return -1;
   }
