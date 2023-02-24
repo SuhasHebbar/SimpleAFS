@@ -84,7 +84,7 @@ int unreliable_lstat(const char *path, struct stat *buf)
     }
 
     memset(buf, 0, sizeof(struct stat));
-    if (lstat(path, buf) == -1) {
+    if (afs_fuse_lstat(path, buf) == -1) {
         return -errno;
     }
 
