@@ -121,6 +121,9 @@ DIR *AfsClient::fuseOpenDir(std::string const &remotepath) {
     return NULL;
   }
 
+  int nfiles = statdata->dd().files_size();
+  // DEBUG("nfiles is %d", nfiles);
+
   return (DIR *)statdata;
 }
 
@@ -226,23 +229,8 @@ int AfsClient::fetchDirectory(std::string const &remotepath) {
   return 0;
 }
 
-
 int AfsClient::Fetch(std::string const &remotepath) {
   std::string const localpath = concatenatedPaths(cachedir_, remotepath);
-
-  struct stat statbuf;
-  int ret = lstat(localpath.c_str(), &statbuf);
-
-  if (ret < 0 && errno != ENOENT && errno != ENOTDIR) {
-    // XXX: Should we remove entry from cache?
-    D(perror(__FILE__ ":" EXPAND(__LINE__));)
-    return -1;
-  }
-
-  if (ret >= 0 && !S_ISDIR(statbuf.st_mode) && !S_ISREG(statbuf.st_mode)) {
-    // Only fetch regular files and directories
-    return 0;
-  }
 
   // Ensure we can fetch the file
   auto authdata = TestAuth(remotepath);
@@ -252,6 +240,9 @@ int AfsClient::Fetch(std::string const &remotepath) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
     return -1;
   }
+
+  struct stat statbuf;
+  int ret = lstat(localpath.c_str(), &statbuf);
 
   // Check if we are on the latest version of the file
 #ifdef __APPLE__
@@ -276,7 +267,11 @@ int AfsClient::Fetch(std::string const &remotepath) {
   }
 
   if (S_ISDIR(authdata.mode())) {
-    return fetchDirectory(remotepath);
+    if (ret < 0) {
+      return fetchDirectory(remotepath);
+    } else {
+      return 0;
+    }
   }
 
   // special type of file - do not support
@@ -607,7 +602,7 @@ DIR *AfsClient::fuse_opendir(const char *path) {
     return NULL;
   }
 
-  return fuseOpenDir(path);
+  return fuseOpenDir(getAFSPath(path));
 }
 
 int AfsClient::fuse_close(int fd, const char *path) {
@@ -616,7 +611,31 @@ int AfsClient::fuse_close(int fd, const char *path) {
     return -1;
   }
 
-  return Store(getAFSPath(path));
+  auto remotePath = getAFSPath(path);
+  auto localpath = concatenatedPaths(cachedir_, remotePath);
+
+  // Check if we need to flush.
+  auto authdata = TestAuth(remotePath);
+  if (!authdata.status().success()) {
+    // XXX: What to do if we cannot contact the server?
+    errno = authdata.status().err_code();
+    D(perror(__FILE__ ":" EXPAND(__LINE__));)
+    return -1;
+  }
+
+  struct stat statbuf;
+  int ret = lstat(localpath.c_str(), &statbuf);
+
+  // Check if we are on the latest version of the file
+#ifdef __APPLE__
+  if (ret >= 0 && authdata.lmtime().seconds() <= statbuf.st_mtime) {
+#else
+  if (ret >= 0 && authdata.lmtime().seconds() <= statbuf.st_mtim.tv_sec) {
+#endif
+    return 0;
+  }
+
+  return Store(remotePath);
 }
 
 int AfsClient::fuse_unlink(const char *path) {

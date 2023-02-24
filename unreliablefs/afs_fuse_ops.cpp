@@ -84,8 +84,8 @@ int afs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
   std::lock_guard<std::mutex> guard{fuse_lock};
 
-  DIR *dp = afs_fuse_opendir(path);
-  if (dp == NULL) {
+  DIR *dp = g_afsClient->fuse_opendir(path);
+  if (dp == nullptr) {
     return -errno;
   }
 
@@ -97,6 +97,9 @@ int afs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
   int nfiles = statdata->dd().files_size();
   for (int i = 0; i < nfiles; i++) {
     auto entry = statdata->dd().files(i);
+    // if (entry == "." || entry == "..") {
+    //   continue;
+    // }
     struct stat st;
     memset(&st, 0, sizeof(st));
     st.st_ino = 0;
