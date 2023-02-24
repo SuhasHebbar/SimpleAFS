@@ -110,6 +110,20 @@ std::vector<std::string> getAncestry(std::string const &remotepath) {
 AfsClient::AfsClient(const char *serveraddr, const char *cachedir)
     : stub_{makeStub(serveraddr)}, cachedir_{sanitize(cachedir)} {}
 
+DIR *AfsClient::fuseOpenDir(std::string const &remotepath) {
+  ClientContext context;
+  Path path;
+  path.set_name(remotepath);
+  auto statdata = new StatData;
+  Status status = stub_->GetFileStat(&context, path, statdata);
+  if (!status.ok()) {
+    // Emulate server on server failures
+    return NULL;
+  }
+
+  return (DIR *)statdata;
+}
+
 int AfsClient::makeParentDirs(std::string const &remotepath) {
   auto ancestry = getAncestry(remotepath);
   int ndirs = ancestry.size() - 1;
@@ -193,7 +207,8 @@ int AfsClient::fetchRegular(std::string const &remotepath) {
     errno = err_code;
     return -1;
   }
-  int chmod_ret = chmod(localpath.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH);
+  int chmod_ret =
+      chmod(localpath.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH);
   if (chmod_ret < 0) {
     DEBUG("Failed to change permission of tmp file\n");
   }
@@ -202,131 +217,15 @@ int AfsClient::fetchRegular(std::string const &remotepath) {
 }
 
 int AfsClient::fetchDirectory(std::string const &remotepath) {
-  char tmpfname[] = "/tmp/afs/client/fetchdir.XXXXXX";
-  if (!mkdtemp(tmpfname)) {
-    D(perror(__FILE__ ":" EXPAND(__LINE__));)
-    return -1;
-  }
-  std::string tmppath = std::string(tmpfname);
-
-  // Empty directory created for the purposes of swapping
-  char sinkfname[] = "/tmp/afs/client/sinkdir.XXXXXX";
-  if (!mkdtemp(sinkfname)) {
-    int err_code = errno;
-    rmdir(tmpfname);
-    errno = err_code;
-    D(perror(__FILE__ ":" EXPAND(__LINE__));)
-    return -1;
-  }
-
-  ClientContext context;
-  Path path;
-  path.set_name(remotepath);
-  StatData statdata;
-  Status status = stub_->GetFileStat(&context, path, &statdata);
-  if (!status.ok()) {
-    // Emulate server on server failures
-    rmdir(tmpfname);
-    rmdir(sinkfname);
-    return 0;
-  }
-
-  int nfiles = statdata.dd().files_size();
-  int fetch_err_code = 0;
-  for (int i = 0; i < nfiles; i++) {
-    auto entry = statdata.dd().files(i);
-
-    // Skip current and parent directory entries
-    if (entry == "." || entry == "..") {
-      continue;
-    }
-
-    auto authdata = TestAuth(concatenatedPaths(remotepath, entry));
-    if (!authdata.status().success()) {
-      errno = authdata.status().err_code();
-      D(perror(__FILE__ ":" EXPAND(__LINE__));)
-      fetch_err_code = errno;
-      break;
-    }
-
-    auto tmpentry = concatenatedPaths(tmppath, entry);
-
-    // Check if the entry is a regular file and create the file
-    if (S_ISREG(authdata.mode())) {
-      int fd = creat(tmpentry.c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-      if (fd < 0) {
-        D(perror(__FILE__ ":" EXPAND(__LINE__));)
-        fetch_err_code = errno;
-        break;
-      }
-
-      // Only need create -> do not need a handle
-      close(fd);
-    }
-
-    // Check if the entry is a directory and create it
-    if (S_ISDIR(authdata.mode())) {
-      if (mkdir(tmpentry.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
-        D(perror(__FILE__ ":" EXPAND(__LINE__));)
-        fetch_err_code = errno;
-        break;
-      }
-    }
-
-
-      // Update our timestamp based on returned timestamps
-      struct timespec times[2];
-      // Don't change the last access time...
-      times[0].tv_nsec = 0;
-      // Set last modified time to be the same as server
-      times[1].tv_nsec = 0;
-      times[1].tv_sec = 0;
-      if (utimensat(-1, tmpentry.c_str(), times, 0) < 0) {
-        D(perror(__FILE__ ":" EXPAND(__LINE__));)
-        fetch_err_code = errno;
-      }
-  }
-
-  // Failed to fetch directory entries
-  if (fetch_err_code) {
-    // XXX: tmpfname may be non-empty => rmdir may fail
-    // XXX: While we could technically garbage collect asynchronously,
-    //      instead we rely on regular cleanup of /tmp directory
-    rmdir(tmpfname);
-    rmdir(sinkfname);
-    errno = fetch_err_code;
-    return -1;
-  }
-
   auto localpath = concatenatedPaths(cachedir_, remotepath);
-
-  // Here we use an empty directory to sink our current directory
-  // We avoid failing when the localpath is not yet created
-  if (rename(localpath.c_str(), sinkfname) < 0 && errno != ENOENT) {
+  if (mkdir(localpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
-    int err_code = errno;
-    // XXX: tmpfname may be non-empty => not removed
-    rmdir(tmpfname);
-    rmdir(sinkfname);
-    errno = err_code;
     return -1;
   }
-
-  if (rename(tmpfname, localpath.c_str()) < 0) {
-    D(perror(__FILE__ ":" EXPAND(__LINE__));)
-    int err_code = errno;
-    // XXX: tmpfname, sinkfname may be non-empty => not removed
-    rmdir(tmpfname);
-    rmdir(sinkfname);
-    errno = err_code;
-    return -1;
-  }
-
-  // XXX: sinkfname may be non-empty => not removed
-  rmdir(sinkfname);
 
   return 0;
 }
+
 
 int AfsClient::Fetch(std::string const &remotepath) {
   std::string const localpath = concatenatedPaths(cachedir_, remotepath);
@@ -708,7 +607,7 @@ DIR *AfsClient::fuse_opendir(const char *path) {
     return NULL;
   }
 
-  return opendir(path);
+  return fuseOpenDir(path);
 }
 
 int AfsClient::fuse_close(int fd, const char *path) {

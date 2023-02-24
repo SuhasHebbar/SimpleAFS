@@ -1,6 +1,8 @@
 #include <cerrno>
 #include <memory>
 
+#include <fuse.h>
+
 #include "afs_client.h"
 
 namespace {
@@ -75,6 +77,44 @@ int afs_fuse_statvfs(const char *path, struct statvfs *buf) {
 DIR *afs_fuse_opendir(const char *path) {
   std::lock_guard<std::mutex> guard{fuse_lock};
   return g_afsClient->fuse_opendir(path);
+}
+
+int afs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
+                     off_t offset, struct fuse_file_info *fi) {
+
+  std::lock_guard<std::mutex> guard{fuse_lock};
+
+  DIR *dp = afs_fuse_opendir(path);
+  if (dp == NULL) {
+    return -errno;
+  }
+
+  (void)offset;
+  (void)fi;
+
+  std::unique_ptr<afs::StatData> statdata{(afs::StatData *)dp};
+
+  int nfiles = statdata->dd().files_size();
+  for (int i = 0; i < nfiles; i++) {
+    auto entry = statdata->dd().files(i);
+    struct stat st;
+    memset(&st, 0, sizeof(st));
+    st.st_ino = 0;
+    // st.st_mode = de->d_type << 12;
+    if (filler(buf, entry.c_str(), &st, 0))
+      break;
+  }
+
+  return 0;
+}
+
+int afs_fuse_closedir(DIR* dp) {
+  if (dp == NULL) {
+    return -1;
+  }
+
+  return 0;
+  std::unique_ptr<afs::StatData> statdata{(afs::StatData *)dp};
 }
 
 int afs_fuse_close(int fd, const char *path) {
