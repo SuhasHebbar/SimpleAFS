@@ -56,7 +56,6 @@ std::unique_ptr<AfsService::Stub> makeStub(const char *serveraddr) {
 std::string concatenatedPaths(std::string const &dir, std::string const &path) {
   if (dir.size() == 0 || path.size() == 0) {
     // Not correct put let's keep the client running.
-    DEBUG("Invalid dir size\n");
     return path;
   }
 
@@ -187,7 +186,6 @@ int AfsClient::fetchRegular(std::string const &remotepath) {
 
   std::string localpath = concatenatedPaths(cachedir_, remotepath);
 
-  DEBUG("Swapping in file %s\n", localpath.c_str());
   if (rename(tmpfname, localpath.c_str()) < 0) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
     int err_code = errno;
@@ -237,16 +235,12 @@ int AfsClient::fetchDirectory(std::string const &remotepath) {
   int fetch_err_code = 0;
   for (int i = 0; i < nfiles; i++) {
     auto entry = statdata.dd().files(i);
-    const char *ecstr = entry.c_str();
-    DEBUG("DUMMY FILE %s\n", ecstr);
 
     // Skip current and parent directory entries
     if (entry == "." || entry == "..") {
       continue;
     }
 
-    auto conc = concatenatedPaths(remotepath, entry);
-    const char *cconc = conc.c_str();
     auto authdata = TestAuth(concatenatedPaths(remotepath, entry));
     if (!authdata.status().success()) {
       errno = authdata.status().err_code();
@@ -291,9 +285,6 @@ int AfsClient::fetchDirectory(std::string const &remotepath) {
         D(perror(__FILE__ ":" EXPAND(__LINE__));)
         fetch_err_code = errno;
       }
-      struct stat statbuf;
-      int ret = lstat(tmpentry.c_str(), &statbuf);
-  }
 
   // Failed to fetch directory entries
   if (fetch_err_code) {
@@ -320,7 +311,6 @@ int AfsClient::fetchDirectory(std::string const &remotepath) {
     return -1;
   }
 
-  DEBUG("Swapping in directory %s\n", localpath.c_str());
   if (rename(tmpfname, localpath.c_str()) < 0) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
     int err_code = errno;
