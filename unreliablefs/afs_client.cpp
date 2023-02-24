@@ -74,6 +74,35 @@ std::string concatenatedPaths(std::string const &dir, std::string const &path) {
   return dir + "/" + cleanPath;
 }
 
+static std::string base64_encode(const std::string &in) {
+    std::string out;
+
+    int val = 0, valb = -6;
+    for (char c : in) {
+        val = (val << 8) + c;
+        valb += 8;
+        while (valb >= 0) {
+            out.push_back("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[(val>>valb)&0x3F]);
+            valb -= 6;
+        }
+    }
+    if (valb>-6) out.push_back("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[((val<<8)>>(valb+8))&0x3F]);
+    while (out.size()%4) out.push_back('=');
+    return out;
+}
+
+std::string getLocalPath(std::string const& cachedir, std::string const& remotePath) {
+  auto hasher = std::hash<std::string>();
+  size_t hash = hasher(remotePath);
+  char* strHash = reinterpret_cast<char*>(&hash);
+  std::string hashPath;
+  for (int i = 0; i < sizeof(size_t); i++) {
+    hashPath += strHash[i];
+  }
+  hashPath = base64_encode(hashPath);
+  return concatenatedPaths(cachedir, hashPath);
+}
+
 // removes all redundant slashes
 std::string sanitize(std::string const &path) {
   int n = path.size();
@@ -127,35 +156,35 @@ DIR *AfsClient::fuseOpenDir(std::string const &remotepath) {
   return (DIR *)statdata;
 }
 
-int AfsClient::makeParentDirs(std::string const &remotepath) {
-  auto ancestry = getAncestry(remotepath);
-  int ndirs = ancestry.size() - 1;
-  std::string localpath = cachedir_;
-  for (int i = 0; i < ndirs; i++) {
-    localpath += '/';
-    localpath += ancestry[i];
-
-    // ASSUMPTION: symlink exists => hardlink exists
-    //   this assmuption is valid when both symbolic and hard links exist in the
-    //   cache and symbolic link removed before the hard link
-    struct stat statbuf;
-    int ret = lstat(localpath.c_str(), &statbuf);
-    // - There is no entry
-    // - File is not a directory
-    if ((ret < 0 && errno == ENOENT) || !S_ISDIR(statbuf.st_mode)) {
-      // Remove any existing files to create a directory
-      unlink(localpath.c_str());
-      // Creating a directory is safe since we have confirmation from server
-      // that this is a directory
-      if (mkdir(localpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
-        D(perror(__FILE__ ":" EXPAND(__LINE__));)
-        return -1;
-      }
-    }
-  }
-
-  return 0;
-}
+// int AfsClient::makeParentDirs(std::string const &remotepath) {
+//   auto ancestry = getAncestry(remotepath);
+//   int ndirs = ancestry.size() - 1;
+//   std::string localpath = cachedir_;
+//   for (int i = 0; i < ndirs; i++) {
+//     localpath += '/';
+//     localpath += ancestry[i];
+//
+//     // ASSUMPTION: symlink exists => hardlink exists
+//     //   this assmuption is valid when both symbolic and hard links exist in the
+//     //   cache and symbolic link removed before the hard link
+//     struct stat statbuf;
+//     int ret = lstat(localpath.c_str(), &statbuf);
+//     // - There is no entry
+//     // - File is not a directory
+//     if ((ret < 0 && errno == ENOENT) || !S_ISDIR(statbuf.st_mode)) {
+//       // Remove any existing files to create a directory
+//       unlink(localpath.c_str());
+//       // Creating a directory is safe since we have confirmation from server
+//       // that this is a directory
+//       if (mkdir(localpath.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0) {
+//         D(perror(__FILE__ ":" EXPAND(__LINE__));)
+//         return -1;
+//       }
+//     }
+//   }
+//
+//   return 0;
+// }
 
 int AfsClient::fetchRegular(std::string const &remotepath) {
   char tmpfname[] = "/tmp/afs/client/fetchreg.XXXXXX";
@@ -201,7 +230,7 @@ int AfsClient::fetchRegular(std::string const &remotepath) {
     return -1;
   }
 
-  std::string localpath = concatenatedPaths(cachedir_, remotepath);
+  std::string localpath = getLocalPath(cachedir_, remotepath);
 
   if (rename(tmpfname, localpath.c_str()) < 0) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
@@ -220,7 +249,7 @@ int AfsClient::fetchRegular(std::string const &remotepath) {
 }
 
 int AfsClient::fetchDirectory(std::string const &remotepath) {
-  auto localpath = concatenatedPaths(cachedir_, remotepath);
+  auto localpath = getLocalPath(cachedir_, remotepath);
   char tmpfname[] = "/tmp/afs/client/fetchdir.XXXXXX";
   if (!mkdtemp(tmpfname)) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
@@ -268,7 +297,7 @@ int AfsClient::fetchDirectory(std::string const &remotepath) {
 }
 
 int AfsClient::Fetch(std::string const &remotepath) {
-  std::string const localpath = concatenatedPaths(cachedir_, remotepath);
+  std::string const localpath = getLocalPath(cachedir_, remotepath);
 
   // Ensure we can fetch the file
   auto authdata = TestAuth(remotepath);
@@ -291,11 +320,11 @@ int AfsClient::Fetch(std::string const &remotepath) {
     return 0;
   }
 
-  // First, we make all the parent directories
-  if (ret < 0 && makeParentDirs(remotepath) < 0) {
-    D(perror(__FILE__ ":" EXPAND(__LINE__));)
-    return -1;
-  }
+  // // First, we make all the parent directories
+  // if (ret < 0 && makeParentDirs(remotepath) < 0) {
+  //   D(perror(__FILE__ ":" EXPAND(__LINE__));)
+  //   return -1;
+  // }
 
   // XXX: Server cannot provide the precise value of mode
   //   and hence we do not call chmod
@@ -335,7 +364,7 @@ int AfsClient::Store(std::string const &remotepath) {
   }
 
   // Open file for reading
-  auto localpath = concatenatedPaths(cachedir_, remotepath);
+  auto localpath = getLocalPath(cachedir_, remotepath);
   auto fp = fopen(localpath.c_str(), "r");
   if (!fp) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
@@ -523,7 +552,7 @@ AuthData AfsClient::TestAuth(std::string const &remotepath) {
   Status status = stub_->TestAuth(&context, path, &authdata);
   if (!status.ok()) {
     // Emulate server on server failures
-    auto localpath = concatenatedPaths(cachedir_, remotepath);
+    auto localpath = getLocalPath(cachedir_, remotepath);
     struct stat statbuf;
     auto status = authdata.mutable_status();
     if (lstat(localpath.c_str(), &statbuf) < 0) {
@@ -650,7 +679,7 @@ int AfsClient::fuse_close(int fd, const char *path) {
   }
 
   auto remotePath = getAFSPath(path);
-  auto localpath = concatenatedPaths(cachedir_, remotePath);
+  auto localpath = getLocalPath(cachedir_, remotePath);
 
   // Check if we need to flush.
   auto authdata = TestAuth(remotePath);

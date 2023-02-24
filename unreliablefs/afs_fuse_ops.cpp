@@ -116,8 +116,8 @@ int afs_fuse_closedir(DIR* dp) {
     return -1;
   }
 
-  return 0;
   std::unique_ptr<afs::StatData> statdata{(afs::StatData *)dp};
+  return 0;
 }
 
 int afs_fuse_close(int fd, const char *path) {
