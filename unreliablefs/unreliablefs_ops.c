@@ -574,26 +574,7 @@ int unreliable_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
         return ret;
     }
 
-    DIR *dp = afs_fuse_opendir(path);
-    if (dp == NULL) {
-	return -errno;
-    }
-    struct dirent *de;
-
-    (void) offset;
-    (void) fi;
-
-    while ((de = readdir(dp)) != NULL) {
-        struct stat st;
-        memset(&st, 0, sizeof(st));
-        st.st_ino = de->d_ino;
-        st.st_mode = de->d_type << 12;
-        if (filler(buf, de->d_name, &st, 0))
-            break;
-    }
-    closedir(dp);
-
-    return 0;
+    return afs_fuse_readdir(path, buf, filler, offset, fi);
 }
 
 int unreliable_releasedir(const char *path, struct fuse_file_info *fi)
@@ -607,7 +588,7 @@ int unreliable_releasedir(const char *path, struct fuse_file_info *fi)
 
     DIR *dir = (DIR *) fi->fh;
 
-    ret = closedir(dir);
+    ret = afs_fuse_closedir(dir);
     if (ret == -1) {
         return -errno;
     }
@@ -624,7 +605,7 @@ int unreliable_fsyncdir(const char *path, int datasync, struct fuse_file_info *f
         return ret;
     }
 
-    DIR *dir = opendir(path);
+    DIR *dir = afs_fuse_opendir(path);
     if (!dir) {
         return -errno;
     }
@@ -640,7 +621,7 @@ int unreliable_fsyncdir(const char *path, int datasync, struct fuse_file_info *f
             return -errno;
         }
     }
-    closedir(dir);
+    afs_fuse_closedir(dir);
 
     return 0;
 }

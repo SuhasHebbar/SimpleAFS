@@ -13,6 +13,7 @@
 #include <grpc++/grpc++.h>
 #include "afs.grpc.pb.h"
 
+
 using afs::AuthData;
 using afs::AfsService;
 
@@ -49,6 +50,7 @@ class AfsClient {
         int makeParentDirs(std::string const& remotepath);
         int fetchRegular(std::string const& remotepath);
         int fetchDirectory(std::string const& remotepath);
+        DIR* fuseOpenDir(std::string const& remotepath);
 
         std::unique_ptr<AfsService::Stub> stub_;
         std::string cachedir_;
