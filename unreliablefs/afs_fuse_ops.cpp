@@ -128,8 +128,15 @@ int afs_fuse_open(const char *path, int flags) {
 }
 
 int afs_fuse_creat(const char *path, int flags, mode_t mode) {
+  int fd =  g_afsClient->fuse_creat(path, flags, mode);
 
-  return g_afsClient->fuse_creat(path, flags, mode);
+  if (fd != -1) {
+    fuse_lock.lock();
+    file_write_state[fd] = FileState::VALID_HANDLE;
+    fuse_lock.unlock();
+  }
+
+  return fd;
 }
 
 int afs_fuse_statvfs(const char *path, struct statvfs *buf) {
@@ -196,6 +203,12 @@ void afs_fuse_markdirty(int fd) {
     file_write_state[fd] = FileState::RECEIVED_WRITE;
     fuse_lock.unlock();
   }
+}
+
+void afs_fuse_copydirty(int srcfd, int destfd) {
+  fuse_lock.lock();
+  file_write_state[destfd] = file_write_state[srcfd];
+  fuse_lock.unlock();
 }
 
 int afs_fuse_unlink(const char *path) { return g_afsClient->fuse_unlink(path); }

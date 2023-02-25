@@ -568,11 +568,7 @@ int AfsClient::fuse_mkdir(const char *path, mode_t mode) {
     return -1;
   }
 
-  // XXX: more accurate to fetch directory from the server instead
-  //   because we are unsure of the presence of parent directories locally
-  //   but avoiding that for simplicity
-  // XXX: mode erased on next fetch
-  return mkdir(path, mode);
+  return 0;
 }
 
 int AfsClient::fuse_rmdir(const char *path) {
