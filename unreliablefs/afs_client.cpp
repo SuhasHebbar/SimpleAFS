@@ -595,6 +595,8 @@ int AfsClient::fuse_truncate(const char *path, off_t length) {
   if (truncate(path, length) < 0) {
     return -1;
   }
+  auto remotePath = getAFSPath(path);
+  return Store(remotePath);
 }
 
 int AfsClient::fuse_open(const char *path, int flags) {
