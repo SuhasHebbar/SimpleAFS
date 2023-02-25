@@ -409,7 +409,9 @@ int unreliable_flush(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
-    ret = afs_fuse_close(dup(fi->fh), path);
+    int newfd = dup(fi->fh);
+    afs_fuse_copydirty(fi->fh, newfd);
+    ret = afs_fuse_close(newfd, path);
     if (ret == -1) {
         return -errno;
     }
