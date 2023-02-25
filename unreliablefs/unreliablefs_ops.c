@@ -374,6 +374,7 @@ int unreliable_write(const char *path, const char *buf, size_t size,
     if (ret == -1) {
         ret = -errno;
     }
+    afs_fuse_markdirty(fd);
 
     if(fi == NULL) {
         afs_fuse_close(fd, path);

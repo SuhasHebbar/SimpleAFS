@@ -22,5 +22,6 @@ int afs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                       off_t offset, struct fuse_file_info *fi);
 int afs_fuse_closedir(DIR* dp);
 int afs_fuse_close(int fd, const char *path);
+void afs_fuse_markdirty(int fd);
 int afs_fuse_unlink(const char *path);
 int afs_fuse_access(const char *path, int amode);

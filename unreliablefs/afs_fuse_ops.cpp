@@ -9,12 +9,28 @@ namespace {
 
 std::unique_ptr<AfsClient> g_afsClient;
 
+enum class FileState {
+  INVALID_HANDLE = 0,
+  VALID_HANDLE,
+  RECEIVED_WRITE,
+};
+
 std::mutex fuse_lock;
+// Trace if an open file handle received a write.
+std::array<FileState, 1024> write_performed;
+
 } // anonymous namespace
 
 extern "C" {
 
 int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
+  // Lock is not necessary but let's keep it a good habit.
+  fuse_lock.lock();
+  // Initialize even if globally it would already initialized.
+  std::fill(write_performed.begin(), write_performed.end(),
+            FileState::INVALID_HANDLE);
+  fuse_lock.unlock();
+
   if (mkdir("/tmp/afs", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) < 0 &&
       errno != EEXIST) {
     return -1;
@@ -32,57 +48,56 @@ int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
 void afs_fuse_teardown() { g_afsClient.reset(); }
 
 int afs_fuse_lstat(const char *path, struct stat *buf) {
-  
+
   return g_afsClient->fuse_lstat(path, buf);
 }
 
 int afs_fuse_mkdir(const char *path, mode_t mode) {
-  
+
   return g_afsClient->fuse_mkdir(path, mode);
 }
 
-int afs_fuse_rmdir(const char *path) {
-  
-  return g_afsClient->fuse_rmdir(path);
-}
+int afs_fuse_rmdir(const char *path) { return g_afsClient->fuse_rmdir(path); }
 
 int afs_fuse_rename(const char *oldpath, const char *newpath) {
-  
+
   return g_afsClient->fuse_rename(oldpath, newpath);
 }
 
 int afs_fuse_truncate(const char *path, off_t length) {
-  
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   int ret = g_afsClient->fuse_truncate(path, length);
-  std::cout << __FILE__ << " " << __LINE__ << std::endl;
   return ret;
 }
 
 int afs_fuse_open(const char *path, int flags) {
-  
-  return g_afsClient->fuse_open(path, flags);
+
+  int fd = g_afsClient->fuse_open(path, flags);
+  if (fd != -1) {
+    fuse_lock.lock();
+    write_performed[fd] = FileState::VALID_HANDLE;
+    fuse_lock.unlock();
+  }
+
+  return fd;
 }
 
 int afs_fuse_creat(const char *path, int flags, mode_t mode) {
-  
+
   return g_afsClient->fuse_creat(path, flags, mode);
 }
 
 int afs_fuse_statvfs(const char *path, struct statvfs *buf) {
-  
+
   return g_afsClient->fuse_statvfs(path, buf);
 }
 
 DIR *afs_fuse_opendir(const char *path) {
-  
+
   return g_afsClient->fuse_opendir(path);
 }
 
 int afs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
                      off_t offset, struct fuse_file_info *fi) {
-
-  
 
   DIR *dp = g_afsClient->fuse_opendir(path);
   if (dp == nullptr) {
@@ -111,7 +126,7 @@ int afs_fuse_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
   return 0;
 }
 
-int afs_fuse_closedir(DIR* dp) {
+int afs_fuse_closedir(DIR *dp) {
   if (dp == NULL) {
     return -1;
   }
@@ -121,17 +136,26 @@ int afs_fuse_closedir(DIR* dp) {
 }
 
 int afs_fuse_close(int fd, const char *path) {
-  
-  return g_afsClient->fuse_close(fd, path);
+  fuse_lock.lock();
+  bool file_received_write = write_performed[fd] == FileState::RECEIVED_WRITE;
+  write_performed[fd] = FileState::INVALID_HANDLE;
+  fuse_lock.unlock();
+
+  return g_afsClient->fuse_close(fd, path, file_received_write);
 }
 
-int afs_fuse_unlink(const char *path) {
-  
-  return g_afsClient->fuse_unlink(path);
+void afs_fuse_markdirty(int fd) {
+  if (fd >= 0 && fd < 1024) {
+    fuse_lock.lock();
+    write_performed[fd] = FileState::RECEIVED_WRITE;
+    fuse_lock.unlock();
+  }
 }
+
+int afs_fuse_unlink(const char *path) { return g_afsClient->fuse_unlink(path); }
 
 int afs_fuse_access(const char *path, int amode) {
-  
+
   return g_afsClient->fuse_access(path, amode);
 }
 
