@@ -595,8 +595,6 @@ int AfsClient::fuse_truncate(const char *path, off_t length) {
   if (truncate(path, length) < 0) {
     return -1;
   }
-
-  return Store(getAFSPath(path));
 }
 
 int AfsClient::fuse_open(const char *path, int flags) {
@@ -643,37 +641,17 @@ DIR *AfsClient::fuse_opendir(const char *path) {
   return fuseOpenDir(getAFSPath(path));
 }
 
-int AfsClient::fuse_close(int fd, const char *path) {
+int AfsClient::fuse_close(int fd, const char *path, bool receive_write) {
   if (close(fd) < 0) {
     D(perror(__FILE__ ":" EXPAND(__LINE__));)
     return -1;
   }
 
-  auto remotePath = getAFSPath(path);
-  auto localpath = concatenatedPaths(cachedir_, remotePath);
-
-  // Check if we need to flush.
-  auto authdata = TestAuth(remotePath);
-  if (!authdata.status().success()) {
-    // XXX: What to do if we cannot contact the server?
-    errno = authdata.status().err_code();
-    D(perror(__FILE__ ":" EXPAND(__LINE__));)
-    return -1;
+  if (receive_write) {
+    auto remotePath = getAFSPath(path);
+    return Store(remotePath);
   }
-
-  struct stat statbuf;
-  int ret = lstat(localpath.c_str(), &statbuf);
-
-  // Check if we are on the latest version of the file
-#ifdef __APPLE__
-  if (ret >= 0 && authdata.lmtime().seconds() <= statbuf.st_mtime) {
-#else
-  if (ret >= 0 && authdata.lmtime().seconds() <= statbuf.st_mtim.tv_sec) {
-#endif
-    return 0;
-  }
-
-  return Store(remotePath);
+  return 0;
 }
 
 int AfsClient::fuse_unlink(const char *path) {

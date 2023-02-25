@@ -31,7 +31,7 @@ class AfsClient {
         int fuse_creat(const char* path, int flags, mode_t mode);
         int fuse_statvfs(const char *path, struct statvfs *buf);
         DIR* fuse_opendir(const char *path);
-        int fuse_close(int fd, const char *path);
+        int fuse_close(int fd, const char *path, bool received_write);
         int fuse_unlink(const char *path);
         int fuse_access(const char *path, int amode);
 
