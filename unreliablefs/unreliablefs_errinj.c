@@ -234,6 +234,16 @@ int error_inject(const char* path, fuse_op operation)
 		fprintf(stdout, "end of '%s' slowdown with '%d' ns\n", op_name, err->duration);
             }
             break;
+	case ALICE_DELAY:
+	    if (operation == OP_WRITE) {
+		rc = -ERRNO_DELAY;
+	    }
+	    break;
+	case ALICE_REORDER:
+	    if (operation == OP_WRITE) {
+		rc = -ERRNO_REORDER;
+	    }
+	    break;
         }
     }
 

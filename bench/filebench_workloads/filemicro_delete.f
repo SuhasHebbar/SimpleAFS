@@ -32,7 +32,7 @@
 set $dir=/users/hebbar2/dirs/mnt
 set $count=10000
 set $filesize=16k
-set $nfiles=50000
+set $nfiles=10000
 set $meandirwidth=100
 set $nthreads=16
 
