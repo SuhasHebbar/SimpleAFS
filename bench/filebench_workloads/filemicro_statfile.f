@@ -29,7 +29,7 @@
 #
 
 set $dir=/users/hebbar2/dirs/mnt
-set $nfiles=20000
+set $nfiles=10000
 set $meandirwidth=200
 set $filesize=128k
 set $nthreads=20

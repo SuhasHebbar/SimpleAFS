@@ -17,10 +17,13 @@
 #endif
 
 #define ERRNO_NOOP -999
+#define ERRNO_DELAY -998
+#define ERRNO_REORDER -997
 
 #include "unreliablefs_ops.h"
 
 #include "afs_fuse_ops.h"
+#include "alice.h"
 
 const char *fuse_op_name[] = {
     "getattr",
@@ -354,6 +357,8 @@ int unreliable_write(const char *path, const char *buf, size_t size,
     int ret = error_inject(path, OP_WRITE);
     if (ret == -ERRNO_NOOP) {
         return 0;
+    } else if (ret == -ERRNO_DELAY || ret == -ERRNO_REORDER) {
+	// passthrough
     } else if (ret) {
         return ret;
     }
@@ -370,7 +375,13 @@ int unreliable_write(const char *path, const char *buf, size_t size,
 	return -errno;
     }
 
-    ret = pwrite(fd, buf, size, offset);
+    if (ret == -ERRNO_DELAY) {
+	ret = alice_delay_pwrite(fd, buf, size, offset);
+    } else if (ret == -ERRNO_REORDER) {
+	ret = alice_reorder_pwrite(fd, buf, size, offset);
+    } else {
+	ret = pwrite(fd, buf, size, offset);
+    }
     if (ret == -1) {
         ret = -errno;
     }
@@ -409,6 +420,7 @@ int unreliable_flush(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
+    alice_fsync(fi->fh);
     int newfd = dup(fi->fh);
     afs_fuse_copydirty(fi->fh, newfd);
     ret = afs_fuse_close(newfd, path);
@@ -444,6 +456,8 @@ int unreliable_fsync(const char *path, int datasync, struct fuse_file_info *fi)
     } else if (ret) {
         return ret;
     }
+
+    alice_fsync(fi->fh);
 
     if (datasync) {
         ret = fdatasync(fi->fh);
@@ -631,12 +645,13 @@ int unreliable_fsyncdir(const char *path, int datasync, struct fuse_file_info *f
 
 void *unreliable_init(struct fuse_conn_info *conn)
 {
+    alice_init();
     return NULL;
 }
 
 void unreliable_destroy(void *private_data)
 {
-
+    alice_destroy();
 }
 
 int unreliable_access(const char *path, int mode)
