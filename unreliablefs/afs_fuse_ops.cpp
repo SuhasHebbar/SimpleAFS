@@ -17,7 +17,51 @@ enum class FileState {
 
 std::mutex fuse_lock;
 // Trace if an open file handle received a write.
-std::array<FileState, 1024> write_performed;
+std::array<FileState, 1024> file_write_state;
+
+// TODO: Create utils.cpp to store utility functions like this.
+int createDirectory(std::string const& path) {
+  char tmpfname[] = "/tmp/afs/client/fetchdir.XXXXXX";
+  if (!mkdtemp(tmpfname)) {
+    return -1;
+  }
+  std::string tmppath = std::string(tmpfname);
+
+  // Empty directory created for the purposes of swapping
+  char sinkfname[] = "/tmp/afs/client/sinkdir.XXXXXX";
+  if (!mkdtemp(sinkfname)) {
+    int err_code = errno;
+    rmdir(tmpfname);
+    errno = err_code;
+    return -1;
+  }
+
+
+  // Here we use an empty directory to sink our current directory
+  // We avoid failing when the localpath is not yet created
+  if (rename(path.c_str(), sinkfname) < 0 && errno != ENOENT) {
+    int err_code = errno;
+    // XXX: tmpfname may be non-empty => not removed
+    rmdir(tmpfname);
+    rmdir(sinkfname);
+    errno = err_code;
+    return -1;
+  }
+
+  if (rename(tmpfname, path.c_str()) < 0) {
+    int err_code = errno;
+    // XXX: tmpfname, sinkfname may be non-empty => not removed
+    rmdir(tmpfname);
+    rmdir(sinkfname);
+    errno = err_code;
+    return -1;
+  }
+
+  // XXX: sinkfname may be non-empty => not removed
+  rmdir(sinkfname);
+
+  return 0;
+}
 
 } // anonymous namespace
 
@@ -27,7 +71,7 @@ int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
   // Lock is not necessary but let's keep it a good habit.
   fuse_lock.lock();
   // Initialize even if globally it would already initialized.
-  std::fill(write_performed.begin(), write_performed.end(),
+  std::fill(file_write_state.begin(), file_write_state.end(),
             FileState::INVALID_HANDLE);
   fuse_lock.unlock();
 
@@ -40,6 +84,8 @@ int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
       errno != EEXIST) {
     return -1;
   }
+
+  createDirectory(cachedir);
 
   g_afsClient = std::make_unique<AfsClient>(serveraddr, cachedir);
   return 0;
@@ -74,7 +120,7 @@ int afs_fuse_open(const char *path, int flags) {
   int fd = g_afsClient->fuse_open(path, flags);
   if (fd != -1) {
     fuse_lock.lock();
-    write_performed[fd] = FileState::VALID_HANDLE;
+    file_write_state[fd] = FileState::VALID_HANDLE;
     fuse_lock.unlock();
   }
 
@@ -137,8 +183,8 @@ int afs_fuse_closedir(DIR *dp) {
 
 int afs_fuse_close(int fd, const char *path) {
   fuse_lock.lock();
-  bool file_received_write = write_performed[fd] == FileState::RECEIVED_WRITE;
-  write_performed[fd] = FileState::INVALID_HANDLE;
+  bool file_received_write = file_write_state[fd] == FileState::RECEIVED_WRITE;
+  file_write_state[fd] = FileState::INVALID_HANDLE;
   fuse_lock.unlock();
 
   return g_afsClient->fuse_close(fd, path, file_received_write);
@@ -147,7 +193,7 @@ int afs_fuse_close(int fd, const char *path) {
 void afs_fuse_markdirty(int fd) {
   if (fd >= 0 && fd < 1024) {
     fuse_lock.lock();
-    write_performed[fd] = FileState::RECEIVED_WRITE;
+    file_write_state[fd] = FileState::RECEIVED_WRITE;
     fuse_lock.unlock();
   }
 }
