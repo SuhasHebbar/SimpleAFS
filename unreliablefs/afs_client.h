@@ -48,7 +48,7 @@ class AfsClient {
 
         std::string getAFSPath(std::string const& path);
         int makeParentDirs(std::string const& remotepath);
-        int fetchRegular(std::string const& remotepath);
+        int fetchRegular(std::string const& remotepath, AuthData& authdata);
         int fetchDirectory(std::string const& remotepath);
         DIR* fuseOpenDir(std::string const& remotepath);
 

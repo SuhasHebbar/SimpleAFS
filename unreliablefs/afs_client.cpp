@@ -157,7 +157,7 @@ int AfsClient::makeParentDirs(std::string const &remotepath) {
   return 0;
 }
 
-int AfsClient::fetchRegular(std::string const &remotepath) {
+int AfsClient::fetchRegular(std::string const &remotepath, AuthData& authdata) {
   char tmpfname[] = "/tmp/afs/client/fetchreg.XXXXXX";
   int tmpfd = mkstemp(tmpfname);
 
@@ -214,6 +214,18 @@ int AfsClient::fetchRegular(std::string const &remotepath) {
       chmod(localpath.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH);
   if (chmod_ret < 0) {
     DEBUG("Failed to change permission of tmp file\n");
+  }
+
+  // Update our timestamp based on returned timestamps
+  struct timespec times[2];
+  // Don't change the last access time...
+  times[0].tv_nsec = UTIME_OMIT;
+  // Set last modified time to be the same as server
+  times[1].tv_nsec = authdata.lmtime().nanos();
+  times[1].tv_sec = authdata.lmtime().seconds();
+  if (utimensat(-1, localpath.c_str(), times, 0) < 0) {
+    D(perror(__FILE__ ":" EXPAND(__LINE__));)
+    return -1;
   }
 
   return 0;
@@ -286,7 +298,9 @@ int AfsClient::Fetch(std::string const &remotepath) {
 #ifdef __APPLE__
   if (ret >= 0 && authdata.lmtime().seconds() <= statbuf.st_mtime) {
 #else
-  if (ret >= 0 && authdata.lmtime().seconds() <= statbuf.st_mtim.tv_sec) {
+  if (ret >= 0 && authdata.lmtime().seconds() < statbuf.st_mtim.tv_sec || 
+  ((authdata.lmtime().seconds() == statbuf.st_mtim.tv_sec) && 
+  (authdata.lmtime().nanos() <= statbuf.st_mtim.tv_nsec))) {
 #endif
     return 0;
   }
@@ -301,7 +315,7 @@ int AfsClient::Fetch(std::string const &remotepath) {
   //   and hence we do not call chmod
   // Then, we fetch the regular file or directory depending on the mode
   if (S_ISREG(authdata.mode())) {
-    return fetchRegular(remotepath);
+    return fetchRegular(remotepath, authdata);
   }
 
   if (S_ISDIR(authdata.mode())) {
