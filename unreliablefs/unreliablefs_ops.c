@@ -408,7 +408,7 @@ int unreliable_flush(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
-    ret = close(dup(fi->fh));
+    ret = afs_fuse_close(dup(fi->fh), path);
     if (ret == -1) {
         return -errno;
     }
@@ -425,7 +425,7 @@ int unreliable_release(const char *path, struct fuse_file_info *fi)
         return ret;
     }
 
-    ret = afs_fuse_close(fi->fh, path);
+    ret = close(fi->fh);
     if (ret == -1) {
         return -errno;
     }
