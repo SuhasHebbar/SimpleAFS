@@ -349,42 +349,42 @@ sys	0m7.293s
 ================================================================================================
 (12)================================================================================================
 Running varmail.f
+Filebench Version 1.5-alpha3
 WARNING: Could not open /proc/sys/kernel/shmmax file!
 It means that you probably ran Filebench not as a root. Filebench will not increase shared
 region limits in this case, which can lead to the failures on certain workloads.
-Filebench Version 1.5-alpha3
 0.000: Allocated 173MB of shared memory
 0.003: Varmail Version 3.0 personality successfully loaded
 0.003: Populating and pre-allocating filesets
 0.018: bigfileset populated: 20000 files, avg. dir. width = 1000, avg. dir. depth = 1.4, 0 leafdirs, 310.325MB total size
 0.018: Removing bigfileset tree (if exists)
-94.143: Pre-allocating directories in bigfileset tree
-94.153: Pre-allocating files in bigfileset tree
-109.111: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
-109.111: Population and pre-allocation of filesets completed
-109.111: Starting 1 filereader instances
-110.117: Running...
-170.125: Run took 60 seconds...
-170.125: Per-Operation Breakdown
-closefile4           1568ops       26ops/s   0.0mb/s      0.3ms/op [0.02ms -  1.00ms]
-readfile4            1568ops       26ops/s   0.4mb/s      0.5ms/op [0.03ms - 14.30ms]
-openfile4            1568ops       26ops/s   0.0mb/s      1.2ms/op [0.08ms -  2.73ms]
-closefile3           1568ops       26ops/s   0.0mb/s      0.2ms/op [0.03ms -  1.54ms]
-fsyncfile3           1568ops       26ops/s   0.0mb/s    127.2ms/op [41.59ms - 217.22ms]
-appendfilerand3      1570ops       26ops/s   0.2mb/s      1.6ms/op [0.04ms - 17.38ms]
-readfile3            1570ops       26ops/s   0.4mb/s      0.4ms/op [0.04ms - 11.03ms]
-openfile3            1570ops       26ops/s   0.0mb/s      0.9ms/op [0.06ms -  3.04ms]
-closefile2           1570ops       26ops/s   0.0mb/s      0.1ms/op [0.02ms -  0.66ms]
-fsyncfile2           1570ops       26ops/s   0.0mb/s    474.6ms/op [37.65ms - 38016.61ms]
-appendfilerand2      1584ops       26ops/s   0.2mb/s      0.3ms/op [0.04ms -  4.29ms]
-createfile2          1584ops       26ops/s   0.0mb/s      0.8ms/op [0.07ms -  4.66ms]
-deletefile1          1582ops       26ops/s   0.0mb/s      2.4ms/op [0.12ms - 15.07ms]
-170.125: IO Summary: 20440 ops 340.629 ops/s 52/53 rd/wr   1.2mb/s 152.3ms/op
-170.125: Shutting down processes
+0.021: Pre-allocating directories in bigfileset tree
+0.021: Pre-allocating files in bigfileset tree
+0.704: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+0.704: Population and pre-allocation of filesets completed
+0.704: Starting 1 filereader instances
+1.709: Running...
+61.717: Run took 60 seconds...
+61.718: Per-Operation Breakdown
+closefile4           4848ops       81ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.03ms]
+readfile4            4848ops       81ops/s   1.1mb/s      0.1ms/op [0.02ms -  7.34ms]
+openfile4            4848ops       81ops/s   0.0mb/s      0.0ms/op [0.02ms -  0.95ms]
+closefile3           4848ops       81ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.03ms]
+fsyncfile3           4848ops       81ops/s   0.0mb/s    107.8ms/op [71.98ms - 329.85ms]
+appendfilerand3      4864ops       81ops/s   0.6mb/s      0.7ms/op [0.01ms - 39.98ms]
+readfile3            4864ops       81ops/s   1.1mb/s      0.1ms/op [0.02ms - 24.95ms]
+openfile3            4864ops       81ops/s   0.0mb/s      0.0ms/op [0.01ms -  0.36ms]
+closefile2           4864ops       81ops/s   0.0mb/s      0.0ms/op [0.01ms -  0.04ms]
+fsyncfile2           4864ops       81ops/s   0.0mb/s     87.5ms/op [23.91ms - 5846.27ms]
+appendfilerand2      4864ops       81ops/s   0.6mb/s      0.1ms/op [0.03ms -  0.45ms]
+createfile2          4864ops       81ops/s   0.0mb/s      0.1ms/op [0.05ms - 25.24ms]
+deletefile1          4863ops       81ops/s   0.0mb/s      0.8ms/op [0.07ms - 14.70ms]
+61.718: IO Summary: 63151 ops 1052.388 ops/s 162/162 rd/wr   3.5mb/s  49.3ms/op
+61.718: Shutting down processes
 
-real	2m51.236s
-user	0m0.876s
-sys	0m3.768s
+real    1m2.830s
+user    0m1.132s
+sys     0m4.476s
 ================================================================================================
 (13)================================================================================================
 Running webserver.f
