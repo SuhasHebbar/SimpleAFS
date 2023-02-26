@@ -1,0 +1,450 @@
+(0)================================================================================================
+Running filemicro_create.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-Create Version 2.1 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.006: Removing largefile tree (if exists)
+0.012: Pre-allocating directories in largefile tree
+0.025: Pre-allocating files in largefile tree
+0.032: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+0.032: Population and pre-allocation of filesets completed
+0.032: Starting 1 filecreater instances
+1.034: Running...
+11.036: Run took 10 seconds...
+11.036: Per-Operation Breakdown
+finish               732ops       73ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.00ms]
+append-file          733ops       73ops/s  73.2mb/s     13.6ms/op [6.83ms - 16.43ms]
+11.036: IO Summary:   733 ops 73.291 ops/s 0/73 rd/wr  73.2mb/s  13.6ms/op
+11.036: Shutting down processes
+
+real	0m12.126s
+user	0m0.019s
+sys	0m1.799s
+================================================================================================
+(1)================================================================================================
+Running filemicro_createfiles.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-Createfiles Version 2.2 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.123: bigfileset populated: 200000 files, avg. dir. width = 100000, avg. dir. depth = 1.1, 0 leafdirs, 195.312MB total size
+0.124: Removing bigfileset tree (if exists)
+0.130: Pre-allocating directories in bigfileset tree
+0.159: Pre-allocating files in bigfileset tree
+724.216: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+724.216: Population and pre-allocation of filesets completed
+724.217: Starting 1 filecreate instances
+725.221: Running...
+735.222: Run took 10 seconds...
+735.222: Per-Operation Breakdown
+finish               1095ops      109ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.00ms]
+closefile1           1095ops      109ops/s   0.0mb/s      0.1ms/op [0.06ms -  0.16ms]
+writefile1           1095ops      109ops/s   0.1mb/s      0.3ms/op [0.19ms -  0.34ms]
+createfile1          1095ops      109ops/s   0.0mb/s      8.7ms/op [8.19ms - 185.48ms]
+735.222: IO Summary:  3285 ops 328.460 ops/s 0/109 rd/wr   0.1mb/s   9.1ms/op
+735.222: Shutting down processes
+
+real	12m16.317s
+user	0m4.259s
+sys	0m12.629s
+================================================================================================
+(2)================================================================================================
+Running filemicro_createrand.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-CreateRand Version 2.1 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.090: Removing largefile tree (if exists)
+0.096: Pre-allocating directories in largefile tree
+0.109: Pre-allocating files in largefile tree
+0.115: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+0.115: Population and pre-allocation of filesets completed
+0.116: Starting 1 filecreater instances
+1.118: Running...
+11.120: Run took 10 seconds...
+11.120: Per-Operation Breakdown
+finish               78ops        8ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.00ms]
+sync                 78ops        8ops/s   0.0mb/s     54.5ms/op [34.01ms - 489.32ms]
+append-file          791ops       79ops/s  38.7mb/s      7.2ms/op [0.11ms - 16.53ms]
+11.120: IO Summary:   869 ops 86.889 ops/s 0/79 rd/wr  38.7mb/s  12.6ms/op
+11.120: Shutting down processes
+
+real	0m12.205s
+user	0m0.014s
+sys	0m1.188s
+================================================================================================
+(3)================================================================================================
+Running filemicro_delete.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-Delete Version 2.4 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.330: bigfileset populated: 50000 files, avg. dir. width = 100, avg. dir. depth = 2.3, 0 leafdirs, 781.250MB total size
+0.505: Removing bigfileset tree (if exists)
+0.537: Pre-allocating directories in bigfileset tree
+5.483: Pre-allocating files in bigfileset tree
+49.728: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+49.838: Population and pre-allocation of filesets completed
+49.839: Starting 1 filedelete instances
+50.844: Running...
+60.846: Run took 10 seconds...
+60.846: Per-Operation Breakdown
+finish               743ops       74ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.00ms]
+limit                0ops        0ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.00ms]
+deletefile1          743ops       74ops/s   0.0mb/s    209.1ms/op [3.48ms - 761.69ms]
+60.846: IO Summary:   743 ops 74.291 ops/s 0/0 rd/wr   0.0mb/s   0.0ms/op
+60.846: Shutting down processes
+
+real	1m1.954s
+user	0m3.487s
+sys	0m13.597s
+================================================================================================
+(4)================================================================================================
+Running filemicro_rread.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-ReadRand Version 2.2 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.006: Removing bigfile1 tree (if exists)
+0.011: Pre-allocating directories in bigfile1 tree
+0.025: Pre-allocating files in bigfile1 tree
+138.344: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+138.344: Population and pre-allocation of filesets completed
+138.345: Starting 1 filereader instances
+139.348: Running...
+141.349: Run took 2 seconds...
+141.349: Per-Operation Breakdown
+finish               16312ops     8155ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.01ms]
+write-file           16313ops     8155ops/s  15.9mb/s      0.1ms/op [0.00ms - 453.91ms]
+141.349: IO Summary: 16313 ops 8155.379 ops/s 8155/0 rd/wr  15.9mb/s   0.1ms/op
+141.349: Shutting down processes
+
+real	2m22.499s
+user	0m0.072s
+sys	0m10.970s
+================================================================================================
+(5)================================================================================================
+Running filemicro_rwritedsync.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-WriteRandDsync Version 2.1 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.006: Removing bigfile tree (if exists)
+0.012: Pre-allocating directories in bigfile tree
+0.025: Pre-allocating files in bigfile tree
+34.321: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+34.322: Population and pre-allocation of filesets completed
+34.322: Starting 1 filewriter instances
+35.326: Running...
+40.327: Run took 5 seconds...
+40.327: Per-Operation Breakdown
+finish               253ops       51ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.00ms]
+write-file           254ops       51ops/s   0.1mb/s     19.6ms/op [17.86ms - 161.04ms]
+40.327: IO Summary:   254 ops 50.793 ops/s 0/51 rd/wr   0.1mb/s  19.6ms/op
+40.327: Shutting down processes
+
+real	0m41.410s
+user	0m0.024s
+sys	0m2.824s
+================================================================================================
+(6)================================================================================================
+Running filemicro_seqread.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-SeqRead Version 2.1 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.049: Removing largefile tree (if exists)
+0.055: Pre-allocating directories in largefile tree
+0.069: Pre-allocating files in largefile tree
+35.273: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+35.274: Population and pre-allocation of filesets completed
+35.274: Starting 1 filereader instances
+36.278: Running...
+46.279: Run took 10 seconds...
+46.279: Per-Operation Breakdown
+seqread-file         46015ops     4601ops/s 4596.3mb/s      0.2ms/op [0.00ms - 155.61ms]
+46.279: IO Summary: 46015 ops 4600.807 ops/s 4601/0 rd/wr 4596.3mb/s   0.2ms/op
+46.279: Shutting down processes
+
+real	0m47.364s
+user	0m0.211s
+sys	0m12.269s
+================================================================================================
+(7)================================================================================================
+Running filemicro_seqwrite.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-SeqWrite Version 2.2 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.008: Removing bigfile tree (if exists)
+0.014: Pre-allocating directories in bigfile tree
+0.027: Pre-allocating files in bigfile tree
+0.034: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+0.034: Population and pre-allocation of filesets completed
+0.034: Starting 1 filewriter instances
+1.037: Running...
+11.038: Run took 10 seconds...
+11.038: Per-Operation Breakdown
+finish               0ops        0ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.00ms]
+write-file           300ops       30ops/s  29.9mb/s     33.2ms/op [7.11ms - 35.94ms]
+11.038: IO Summary:   300 ops 29.996 ops/s 0/30 rd/wr  29.9mb/s  33.2ms/op
+11.038: Shutting down processes
+
+real	0m12.124s
+user	0m0.019s
+sys	0m0.973s
+================================================================================================
+(8)================================================================================================
+Running filemicro_statfile.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: Stat File Version 1.0 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.386: bigfileset populated: 20000 files, avg. dir. width = 200, avg. dir. depth = 1.9, 0 leafdirs, 2500.000MB total size
+0.388: Removing bigfileset tree (if exists)
+0.394: Pre-allocating directories in bigfileset tree
+1.336: Pre-allocating files in bigfileset tree
+247.186: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+247.186: Population and pre-allocation of filesets completed
+247.186: Starting 1 examinefiles instances
+248.192: Running...
+258.193: Run took 10 seconds...
+258.194: Per-Operation Breakdown
+statfile1            31989ops     3199ops/s   0.0mb/s      6.2ms/op [3.37ms - 22.36ms]
+258.194: IO Summary: 31989 ops 3198.615 ops/s 0/0 rd/wr   0.0mb/s   0.0ms/op
+258.194: Shutting down processes
+
+real	4m19.304s
+user	0m1.554s
+sys	0m11.571s
+================================================================================================
+(9)================================================================================================
+Running filemicro_writefsync.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: FileMicro-WriteFsync Version 2.1 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.044: Removing bigfile tree (if exists)
+0.050: Pre-allocating directories in bigfile tree
+0.062: Pre-allocating files in bigfile tree
+0.069: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+0.069: Population and pre-allocation of filesets completed
+0.070: Starting 1 filewriter instances
+1.073: Running...
+11.074: Run took 10 seconds...
+11.075: Per-Operation Breakdown
+finish               18ops        2ops/s   0.0mb/s      0.0ms/op [0.00ms -  0.01ms]
+sync-file            18ops        2ops/s   0.0mb/s     83.4ms/op [55.69ms - 450.46ms]
+append-file          18605ops     1860ops/s  14.5mb/s      0.5ms/op [0.24ms -  6.66ms]
+11.075: IO Summary: 18623 ops 1862.083 ops/s 0/1860 rd/wr  14.5mb/s   0.5ms/op
+11.075: Shutting down processes
+
+real	0m12.159s
+user	0m0.224s
+sys	0m0.755s
+================================================================================================
+(10)================================================================================================
+Running fileserver.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: File-server Version 3.0 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.429: bigfileset populated: 20000 files, avg. dir. width = 20, avg. dir. depth = 3.3, 0 leafdirs, 2487.318MB total size
+0.430: Removing bigfileset tree (if exists)
+0.436: Pre-allocating directories in bigfileset tree
+9.694: Pre-allocating files in bigfileset tree
+221.056: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+221.056: Population and pre-allocation of filesets completed
+221.056: Starting 1 filereader instances
+222.065: Running...
+232.068: Run took 10 seconds...
+232.074: Per-Operation Breakdown
+statfile1            2370ops      237ops/s   0.0mb/s      6.5ms/op [0.01ms - 26.64ms]
+deletefile1          2373ops      237ops/s   0.0mb/s     72.8ms/op [3.14ms - 1234.58ms]
+closefile3           2383ops      238ops/s   0.0mb/s      4.2ms/op [0.03ms - 381.62ms]
+readfile1            2383ops      238ops/s  29.8mb/s      0.4ms/op [0.06ms -  1.75ms]
+openfile2            2388ops      239ops/s   0.0mb/s     11.4ms/op [2.18ms - 36.37ms]
+closefile2           2390ops      239ops/s   0.0mb/s      4.7ms/op [0.03ms - 383.10ms]
+appendfilerand1      2392ops      239ops/s   1.8mb/s      0.4ms/op [0.09ms -  1.25ms]
+openfile1            2394ops      239ops/s   0.0mb/s     11.2ms/op [1.30ms - 34.80ms]
+closefile1           2396ops      240ops/s   0.0mb/s      5.7ms/op [0.03ms - 374.65ms]
+wrtfile1             2399ops      240ops/s  29.3mb/s      2.5ms/op [0.12ms - 12.67ms]
+createfile1          2400ops      240ops/s   0.0mb/s     87.2ms/op [6.82ms - 395.31ms]
+232.074: IO Summary: 26268 ops 2626.556 ops/s 238/479 rd/wr  61.0mb/s  68.9ms/op
+232.074: Shutting down processes
+
+real	3m53.213s
+user	0m1.281s
+sys	0m13.141s
+================================================================================================
+(11)================================================================================================
+Running mongo.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: Mongo-like Version 2.3 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.010: postsetdel populated: 10000 files, avg. dir. width = 200, avg. dir. depth = 1.7, 0 leafdirs, 156.250MB total size
+0.012: Removing postsetdel tree (if exists)
+0.018: Pre-allocating directories in postsetdel tree
+0.523: Pre-allocating files in postsetdel tree
+9.864: postset populated: 10000 files, avg. dir. width = 200, avg. dir. depth = 1.7, 0 leafdirs, 156.250MB total size
+9.866: Removing postset tree (if exists)
+9.870: Pre-allocating directories in postset tree
+10.243: Pre-allocating files in postset tree
+20.542: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+20.602: Population and pre-allocation of filesets completed
+20.603: Starting 1 filereader instances
+21.605: Running...
+31.607: Run took 10 seconds...
+31.607: Per-Operation Breakdown
+deletefile1          84ops        8ops/s   0.0mb/s    108.5ms/op [3.29ms - 471.56ms]
+closefile2           85ops        8ops/s   0.0mb/s      0.1ms/op [0.07ms -  0.17ms]
+readfile1            85ops        8ops/s   0.1mb/s      0.3ms/op [0.25ms -  0.36ms]
+openfile2            85ops        8ops/s   0.0mb/s      3.5ms/op [3.24ms -  6.81ms]
+closefile1           85ops        8ops/s   0.0mb/s      0.1ms/op [0.11ms -  0.17ms]
+appendfilerand1      85ops        8ops/s   0.1mb/s      0.5ms/op [0.24ms -  0.93ms]
+openfile1            85ops        8ops/s   0.0mb/s      3.8ms/op [3.11ms -  6.86ms]
+31.607: IO Summary:   594 ops 59.393 ops/s 8/8 rd/wr   0.2mb/s  57.8ms/op
+31.607: Shutting down processes
+
+real	0m32.854s
+user	0m1.363s
+sys	0m5.265s
+================================================================================================
+(12)================================================================================================
+Running varmail.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.002: Varmail Version 3.0 personality successfully loaded
+0.002: Populating and pre-allocating filesets
+0.352: bigfileset populated: 20000 files, avg. dir. width = 1000, avg. dir. depth = 1.4, 0 leafdirs, 310.325MB total size
+0.353: Removing bigfileset tree (if exists)
+0.359: Pre-allocating directories in bigfileset tree
+0.543: Pre-allocating files in bigfileset tree
+127.062: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+127.062: Population and pre-allocation of filesets completed
+127.062: Starting 1 filereader instances
+128.068: Running...
+188.075: Run took 60 seconds...
+188.076: Per-Operation Breakdown
+closefile4           4039ops       67ops/s   0.0mb/s      1.5ms/op [0.03ms - 185.88ms]
+readfile4            4039ops       67ops/s   0.9mb/s      0.2ms/op [0.05ms - 103.25ms]
+openfile4            4039ops       67ops/s   0.0mb/s      7.5ms/op [1.43ms - 19.29ms]
+closefile3           4040ops       67ops/s   0.0mb/s      0.6ms/op [0.04ms - 80.03ms]
+fsyncfile3           4040ops       67ops/s   0.0mb/s     90.2ms/op [16.96ms - 171.01ms]
+appendfilerand3      4044ops       67ops/s   0.5mb/s      0.7ms/op [0.08ms - 110.44ms]
+readfile3            4044ops       67ops/s   0.9mb/s      0.2ms/op [0.05ms - 27.21ms]
+openfile3            4044ops       67ops/s   0.0mb/s      7.6ms/op [1.58ms - 19.25ms]
+closefile2           4053ops       68ops/s   0.0mb/s      0.6ms/op [0.05ms - 56.59ms]
+fsyncfile2           4053ops       68ops/s   0.0mb/s     84.2ms/op [17.03ms - 2245.56ms]
+appendfilerand2      4055ops       68ops/s   0.5mb/s      0.5ms/op [0.14ms - 25.89ms]
+createfile2          4055ops       68ops/s   0.0mb/s     25.6ms/op [6.44ms - 323.68ms]
+deletefile1          4055ops       68ops/s   0.0mb/s     17.6ms/op [1.46ms - 248.60ms]
+188.082: IO Summary: 52600 ops 876.574 ops/s 135/135 rd/wr   2.9mb/s  59.3ms/op
+188.082: Shutting down processes
+
+real	3m9.192s
+user	0m1.523s
+sys	0m5.972s
+================================================================================================
+(13)================================================================================================
+Running webserver.f
+WARNING: Could not open /proc/sys/kernel/shmmax file!
+It means that you probably ran Filebench not as a root. Filebench will not increase shared
+region limits in this case, which can lead to the failures on certain workloads.
+Filebench Version 1.5-alpha3
+0.000: Allocated 173MB of shared memory
+0.003: Web-server Version 3.1 personality successfully loaded
+0.003: Populating and pre-allocating filesets
+0.005: logfiles populated: 1 files, avg. dir. width = 200, avg. dir. depth = 0.0, 0 leafdirs, 0.002MB total size
+0.007: Removing logfiles tree (if exists)
+0.013: Pre-allocating directories in logfiles tree
+0.025: Pre-allocating files in logfiles tree
+0.164: bigfileset populated: 20000 files, avg. dir. width = 200, avg. dir. depth = 1.9, 0 leafdirs, 310.502MB total size
+0.166: Removing bigfileset tree (if exists)
+0.171: Pre-allocating directories in bigfileset tree
+1.062: Pre-allocating files in bigfileset tree
+170.028: Waiting for pre-allocation to finish (in case of a parallel pre-allocation)
+170.028: Population and pre-allocation of filesets completed
+170.028: Starting 1 filereader instances
+171.036: Running...
+181.041: Run took 10 seconds...
+181.079: Per-Operation Breakdown
+appendlog            3032ops      303ops/s   2.3mb/s      0.5ms/op [0.06ms - 45.27ms]
+closefile10          2982ops      298ops/s   0.0mb/s      0.1ms/op [0.02ms -  0.86ms]
+readfile10           2982ops      298ops/s   4.7mb/s      0.3ms/op [0.03ms - 89.70ms]
+openfile10           2984ops      298ops/s   0.0mb/s     15.8ms/op [3.24ms - 34.76ms]
+closefile9           2986ops      299ops/s   0.0mb/s      0.1ms/op [0.02ms -  0.94ms]
+readfile9            2986ops      299ops/s   4.7mb/s      0.3ms/op [0.03ms - 92.69ms]
+openfile9            2990ops      299ops/s   0.0mb/s     15.8ms/op [6.69ms - 34.76ms]
+closefile8           2992ops      299ops/s   0.0mb/s      0.1ms/op [0.02ms -  0.85ms]
+readfile8            2992ops      299ops/s   4.6mb/s      0.3ms/op [0.03ms - 92.20ms]
+openfile8            2998ops      300ops/s   0.0mb/s     16.0ms/op [6.68ms - 34.59ms]
+closefile7           3001ops      300ops/s   0.0mb/s      0.1ms/op [0.02ms -  0.76ms]
+readfile7            3001ops      300ops/s   4.6mb/s      0.2ms/op [0.03ms - 95.01ms]
+openfile7            3005ops      300ops/s   0.0mb/s     15.8ms/op [6.52ms - 36.35ms]
+closefile6           3007ops      301ops/s   0.0mb/s      0.1ms/op [0.02ms -  0.74ms]
+readfile6            3007ops      301ops/s   4.6mb/s      0.3ms/op [0.03ms - 86.66ms]
+openfile6            3007ops      301ops/s   0.0mb/s     15.8ms/op [5.54ms - 34.50ms]
+closefile5           3008ops      301ops/s   0.0mb/s      0.1ms/op [0.02ms -  6.88ms]
+readfile5            3008ops      301ops/s   4.7mb/s      0.3ms/op [0.03ms - 92.82ms]
+openfile5            3011ops      301ops/s   0.0mb/s     16.0ms/op [4.43ms - 37.67ms]
+closefile4           3012ops      301ops/s   0.0mb/s      0.1ms/op [0.02ms -  0.86ms]
+readfile4            3012ops      301ops/s   4.7mb/s      0.3ms/op [0.03ms - 92.27ms]
+openfile4            3015ops      301ops/s   0.0mb/s     15.7ms/op [4.24ms - 34.03ms]
+closefile3           3016ops      302ops/s   0.0mb/s      0.1ms/op [0.02ms -  1.69ms]
+readfile3            3016ops      302ops/s   4.7mb/s      0.1ms/op [0.03ms - 76.80ms]
+openfile3            3020ops      302ops/s   0.0mb/s     16.0ms/op [3.91ms - 34.45ms]
+closefile2           3020ops      302ops/s   0.0mb/s      0.1ms/op [0.02ms -  1.12ms]
+readfile2            3020ops      302ops/s   4.6mb/s      0.3ms/op [0.03ms - 94.69ms]
+openfile2            3022ops      302ops/s   0.0mb/s     16.1ms/op [3.31ms - 36.19ms]
+closefile1           3023ops      302ops/s   0.0mb/s      0.1ms/op [0.02ms - 10.02ms]
+readfile1            3023ops      302ops/s   4.8mb/s      0.2ms/op [0.03ms - 87.94ms]
+openfile1            3028ops      303ops/s   0.0mb/s     16.4ms/op [2.98ms - 56.01ms]
+181.079: IO Summary: 93206 ops 9319.900 ops/s 3004/303 rd/wr  48.9mb/s  14.9ms/op
+181.079: Shutting down processes
+
+real	3m2.243s
+user	0m1.749s
+sys	0m7.723s
+================================================================================================
