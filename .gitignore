@@ -9,3 +9,5 @@ bench/out
 bench/id_ed25519*
 stdout.log
 stderr.log
+rtlat.png
+prob.png
