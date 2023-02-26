@@ -34,6 +34,7 @@ message IOResult {
 message StoreData{
 	optional Path path = 1;
 	optional FileData filedata = 2;
+	optional bool lastStore = 3;
 }
 
 message StoreResult{
