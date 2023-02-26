@@ -1,4 +1,5 @@
 #include "afs.grpc.pb.h"
+#include "afs.pb.h"
 #include "common.h"
 #include <cstdio>
 #include <cstdlib>
@@ -569,6 +570,15 @@ AuthData AfsClient::TestAuth(std::string const &remotepath) {
 
 std::string AfsClient::getAFSPath(std::string const &localpath) {
   return localpath.substr(cachedir_.size(), std::string::npos);
+}
+
+bool AfsClient::server_alive() {
+
+  ClientContext context;
+  afs::Empty empty, result;
+
+  Status status = stub_->TestAlive(&context, empty, &result);
+  return status.ok();
 }
 
 int AfsClient::fuse_lstat(const char *path, struct stat *buf) {
