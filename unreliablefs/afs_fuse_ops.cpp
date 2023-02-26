@@ -1,4 +1,5 @@
 #include <cerrno>
+#include <iostream>
 #include <memory>
 #include <thread>
 #include <pthread.h>
@@ -70,6 +71,7 @@ void backgroundHeartbeat(std::string const& cachedir) {
   while (true) {
     if (!g_afsClient->server_alive()) {
       ensureEmptyDirectory(cachedir);
+      std::cerr << "Server failed to reply. It may be down." << std::endl;
     }
     sleep(5);
   }
