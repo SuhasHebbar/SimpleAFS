@@ -95,11 +95,13 @@ class AfsServiceImpl final : public AfsService::Service{
             status->set_success(false);
             return Status::OK;
         }
-
+	
+	bool streamStoreSuccess = false;
         StoreData storedata;
         while (reader->Read(&storedata)) {
             const char* data = storedata.filedata().contents().c_str();
             auto datalen = storedata.filedata().contents().size();
+	    streamStoreSuccess = storedata.filedata().status().success();
             if (write(tmpfd, data, datalen) < 0) {
                 int err_code = errno;
                 close(tmpfd);
@@ -113,7 +115,7 @@ class AfsServiceImpl final : public AfsService::Service{
 
         close(tmpfd);
 
-        if (rename(tempPath, targetPath.c_str()) < 0) {
+        if (!streamStoreSuccess || rename(tempPath, targetPath.c_str()) < 0) {
             int err_code = errno;
             unlink(tempPath);
             auto status = result->mutable_status();
