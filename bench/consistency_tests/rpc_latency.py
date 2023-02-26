@@ -7,11 +7,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def get_rpc_latency(mntdir, fname, cname, nbytes, iter):
+def get_rpc_latency(mntdir, fname, nbytes):
     os.chdir(mntdir)
-    target_str = cname * (nbytes - 3) + f"{iter:2}\n"
+    target_str = "A" * (nbytes - 1) + f"\n"
     fd = os.open(fname, os.O_CREAT | os.O_TRUNC | os.O_RDWR)
     os.write(fd, bytes(target_str, "utf-8"))
+    os.fsync(fd)
     start_time = time.monotonic_ns()
     os.close(fd)
     return time.monotonic_ns() - start_time
@@ -22,14 +23,14 @@ def main():
     fname = sys.argv[2]
     curdir = os.getcwd()
 
-    exp = [3, 7, 10, 13, 17, 20]
-    msgs = [2**x for x in exp]
+    exp = range(10)
+    msgs = [8**x for x in exp]
 
     latencies = []
     for _ in msgs:
         latencies.append([])
 
-    for i in range(100):
+    for i in range(1000):
         for j, sz in enumerate(msgs):
             latencies[j].append(get_rpc_latency(mntdir, fname, "A", sz, i))
 
@@ -51,7 +52,7 @@ def main():
 
     # legend, labels and title
     ax.legend()
-    ax.set_xlabel("msg size in bytes (log scale)")
+    ax.set_xlabel("msg size in bytes (log 8 scale)")
     ax.set_ylabel("Round trip latency in us")
     ax.set_title("Round trip latency stats (100 runs)")
 
