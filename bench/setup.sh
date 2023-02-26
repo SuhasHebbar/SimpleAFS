@@ -1,6 +1,12 @@
 #!/bin/bash
 echo Starting setup script
 
+if [ -f "$HOME/.ssh/known_hosts" ]; then
+  if [ ! -n "$(grep "^github.com" $HOME/.ssh/known_hosts)" ]; then
+    ssh-keyscan -t rsa github.com >> $HOME/.ssh/known_hosts 2>/dev/null;
+  fi
+fi
+
 chmod 400 ~/.ssh/id_ed25519*
 
 # Disable ASLR for filebench
@@ -12,9 +18,10 @@ if [[ "" == "$(ls setup_19.x)" ]]; then
 	sudo -E bash setup_19.x
 fi
 
-# sudo apt update
-# sudo apt autoremove -y --purge
-sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu-system flex bison python-is-python3 python3-paramiko python3-plumbum nodejs npm hyperfine ripgrep trash-cli
+sudo apt update
+sudot apt remove npm
+sudo apt autoremove -y --purge
+sudo apt install -y htop fuse libfuse-dev build-essential autoconf libtool pkg-config cmake qemu-system flex bison python-is-python3 python3-paramiko python3-plumbum nodejs hyperfine ripgrep trash-cli asciinema
 
 if [[ ":$PATH:" != *":$HOME/bin:"* ]]; then
 	echo Adding \$HOME/bin to path
