@@ -15,11 +15,14 @@ service AfsService {
 	rpc Removedir(Path) returns  (IOResult) {}
 	rpc TestAuth(Path) returns (AuthData) {}
 	rpc GetFileStat(Path) returns (StatData) {}
+	rpc TestAlive(Empty) returns (Empty) {}
 }
 
 message Path {
 	optional string name = 1;
 }
+
+message Empty {}
 
 message FileData {
 	optional bytes contents = 1; 

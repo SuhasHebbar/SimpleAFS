@@ -1,7 +1,10 @@
 #include <cerrno>
 #include <memory>
+#include <thread>
+#include <pthread.h>
 
 #include <fuse.h>
+#include <unistd.h>
 
 #include "afs_client.h"
 
@@ -20,7 +23,7 @@ std::mutex fuse_lock;
 std::array<FileState, 1024> file_write_state;
 
 // TODO: Create utils.cpp to store utility functions like this.
-int createDirectory(std::string const& path) {
+int ensureEmptyDirectory(std::string const& path) {
   char tmpfname[] = "/tmp/afs/client/fetchdir.XXXXXX";
   if (!mkdtemp(tmpfname)) {
     return -1;
@@ -63,6 +66,16 @@ int createDirectory(std::string const& path) {
   return 0;
 }
 
+void backgroundHeartbeat(std::string const& cachedir) {
+  while (true) {
+    if (!g_afsClient->server_alive()) {
+      ensureEmptyDirectory(cachedir);
+    }
+    sleep(5);
+  }
+
+}
+
 } // anonymous namespace
 
 extern "C" {
@@ -85,9 +98,13 @@ int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
     return -1;
   }
 
-  createDirectory(cachedir);
+  ensureEmptyDirectory(cachedir);
 
   g_afsClient = std::make_unique<AfsClient>(serveraddr, cachedir);
+
+  std::thread background_thread(backgroundHeartbeat, cachedir);
+  pthread_setname_np(background_thread.native_handle(), "background_hearbeat");
+  
   return 0;
 }
 

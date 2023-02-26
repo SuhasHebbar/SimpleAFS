@@ -1,4 +1,5 @@
 #include <grpc++/grpc++.h>
+#include "afs.pb.h"
 #include "common.h"
 #include "afs.grpc.pb.h"
 #include <string>
@@ -202,6 +203,10 @@ class AfsServiceImpl final : public AfsService::Service{
         }
         result->set_success(true);
         return Status::OK;
+    }
+
+    Status TestAlive(ServerContext* context, const afs::Empty* arg, afs::Empty* result) {
+	return Status::OK;
     }
 
     Status TestAuth(ServerContext* context, const Path* path, AuthData* authdata){
