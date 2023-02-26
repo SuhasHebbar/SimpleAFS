@@ -368,6 +368,7 @@ int AfsClient::Store(std::string const &remotepath) {
       auto status = errordata.mutable_filedata()->mutable_status();
       status->set_success(false);
       status->set_err_code(store_err_code);
+      errordata.set_laststore(false);
 
       writer->Write(errordata);
       break;
@@ -380,6 +381,7 @@ int AfsClient::Store(std::string const &remotepath) {
 
     auto status = filedata->mutable_status();
     status->set_success(true);
+    storedata.set_laststore(feof(fp));
 
     if (!writer->Write(storedata)) {
       // Emulate the server when server crashes
