@@ -115,7 +115,7 @@ class AfsServiceImpl final : public AfsService::Service{
 
         close(tmpfd);
 
-        if (storesuccess || rename(tempPath, targetPath.c_str()) < 0) {
+        if (!storesuccess || rename(tempPath, targetPath.c_str()) < 0) {
             int err_code = errno;
             unlink(tempPath);
             auto status = result->mutable_status();
