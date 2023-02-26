@@ -631,6 +631,7 @@ int unreliable_fsyncdir(const char *path, int datasync, struct fuse_file_info *f
 
 void *unreliable_init(struct fuse_conn_info *conn)
 {
+    afs_fuse_heartbeat();
     return NULL;
 }
 

@@ -179,6 +179,8 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
+    G_CACHEDIR = conf.basedir;
+
     // Make necesssary tmp directories and spawn AFS client
     if (afs_fuse_setup(conf.serveraddr, conf.basedir) < 0) {
         fuse_opt_free_args(&args); 

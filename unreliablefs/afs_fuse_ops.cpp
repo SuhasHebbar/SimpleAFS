@@ -78,7 +78,9 @@ void backgroundHeartbeat(std::string const& cachedir) {
 
 } // anonymous namespace
 
+
 extern "C" {
+char* G_CACHEDIR;
 
 int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
   // Lock is not necessary but let's keep it a good habit.
@@ -102,10 +104,13 @@ int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
 
   g_afsClient = std::make_unique<AfsClient>(serveraddr, cachedir);
 
-  std::thread background_thread(backgroundHeartbeat, cachedir);
-  pthread_setname_np(background_thread.native_handle(), "background_hearbeat");
-  
   return 0;
+}
+
+void afs_fuse_heartbeat() {
+  std::thread background_thread(backgroundHeartbeat, G_CACHEDIR);
+  background_thread.detach();
+  pthread_setname_np(background_thread.native_handle(), "background_hearbeat");
 }
 
 void afs_fuse_teardown() { g_afsClient.reset(); }
