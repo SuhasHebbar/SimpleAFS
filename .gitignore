@@ -7,5 +7,6 @@ mntdir
 .cache
 bench/out
 bench/id_ed25519*
-stdout.log
-stderr.log
+*.log
+*.out
+rtlat.png
