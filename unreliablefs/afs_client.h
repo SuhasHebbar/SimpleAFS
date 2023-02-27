@@ -34,7 +34,6 @@ class AfsClient {
         int fuse_close(int fd, const char *path, bool received_write);
         int fuse_unlink(const char *path);
         int fuse_access(const char *path, int amode);
-        bool server_alive();
 
     private:
         // Wrapper functions around stub functions

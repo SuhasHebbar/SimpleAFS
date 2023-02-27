@@ -67,22 +67,10 @@ int ensureEmptyDirectory(std::string const& path) {
   return 0;
 }
 
-void backgroundHeartbeat(std::string const& cachedir) {
-  while (true) {
-    if (!g_afsClient->server_alive()) {
-      ensureEmptyDirectory(cachedir);
-      std::cerr << "Server failed to reply. It may be down." << std::endl;
-    }
-    sleep(5);
-  }
-
-}
-
 } // anonymous namespace
 
 
 extern "C" {
-char* G_CACHEDIR;
 
 int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
   // Lock is not necessary but let's keep it a good habit.
@@ -107,12 +95,6 @@ int afs_fuse_setup(const char *serveraddr, const char *cachedir) {
   g_afsClient = std::make_unique<AfsClient>(serveraddr, cachedir);
 
   return 0;
-}
-
-void afs_fuse_heartbeat() {
-  std::thread background_thread(backgroundHeartbeat, G_CACHEDIR);
-  background_thread.detach();
-  pthread_setname_np(background_thread.native_handle(), "background_hearbeat");
 }
 
 void afs_fuse_teardown() { g_afsClient.reset(); }
