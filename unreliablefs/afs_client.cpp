@@ -572,15 +572,6 @@ std::string AfsClient::getAFSPath(std::string const &localpath) {
   return localpath.substr(cachedir_.size(), std::string::npos);
 }
 
-bool AfsClient::server_alive() {
-
-  ClientContext context;
-  afs::Empty empty, result;
-
-  Status status = stub_->TestAlive(&context, empty, &result);
-  return status.ok();
-}
-
 int AfsClient::fuse_lstat(const char *path, struct stat *buf) {
   if (Fetch(getAFSPath(path)) < 0) {
     return -1;

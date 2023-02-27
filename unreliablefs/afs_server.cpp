@@ -205,10 +205,6 @@ class AfsServiceImpl final : public AfsService::Service{
         return Status::OK;
     }
 
-    Status TestAlive(ServerContext* context, const afs::Empty* arg, afs::Empty* result) {
-	return Status::OK;
-    }
-
     Status TestAuth(ServerContext* context, const Path* path, AuthData* authdata){
         std::string pathname = basedir_ + "/" + path->name();
         struct stat statbuf;
