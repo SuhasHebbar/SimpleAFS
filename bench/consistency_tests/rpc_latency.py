@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 def get_rpc_latency(mntdir, fname, nbytes):
     os.chdir(mntdir)
-    target_str = "A" * (nbytes - 1) + f"\n"
+    target_str = "A" * (nbytes - 1) + "\n"
     fd = os.open(fname, os.O_CREAT | os.O_TRUNC | os.O_RDWR)
     os.write(fd, bytes(target_str, "utf-8"))
     os.fsync(fd)
@@ -23,16 +23,16 @@ def main():
     fname = sys.argv[2]
     curdir = os.getcwd()
 
-    exp = range(10)
+    exp = range(8)
     msgs = [8**x for x in exp]
 
     latencies = []
     for _ in msgs:
         latencies.append([])
 
-    for i in range(1000):
+    for _ in range(100):
         for j, sz in enumerate(msgs):
-            latencies[j].append(get_rpc_latency(mntdir, fname, "A", sz, i))
+            latencies[j].append(get_rpc_latency(mntdir, fname, sz))
 
     p25 = []
     p50 = []
