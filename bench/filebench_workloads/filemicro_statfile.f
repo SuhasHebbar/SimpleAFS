@@ -28,8 +28,8 @@
 # using $nthreads number of threads, doing "stat" calls on each file.
 #
 
-set $dir=/users/hebbar2/dirs/mnt
-set $nfiles=10000
+set $dir=/users/hebbar2/hebbar2/dirs/mnt
+set $nfiles=20000
 set $meandirwidth=200
 set $filesize=128k
 set $nthreads=20

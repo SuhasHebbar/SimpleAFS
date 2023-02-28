@@ -26,7 +26,7 @@
 
 # Single threaded sequential reads (1MB I/Os) on a 1G file.
 
-set $dir=/users/hebbar2/dirs/mnt
+set $dir=/users/hebbar2/hebbar2/dirs/mnt
 set $cached=false
 set $filesize=1g
 set $iosize=1m
