@@ -27,7 +27,7 @@
 # Simple way to create a file.  Start off with a zero length file, and issue
 # 1024 ($count) 1MB appends.
 
-set $dir=/users/hebbar2/dirs/mnt
+set $dir=/users/hebbar2/hebbar2/dirs/mnt
 set $count=500000
 set $iosize=1m
 set $nthreads=1

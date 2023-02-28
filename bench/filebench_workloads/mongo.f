@@ -24,7 +24,7 @@
 #
 # ident	"%Z%%M%	%I%	%E% SMI"
 
-set $dir=/users/hebbar2/dirs/mnt
+set $dir=/users/hebbar2/hebbar2/dirs/mnt
 set $nfiles=10000
 set $filesize=16k
 set $dirwidth=200
